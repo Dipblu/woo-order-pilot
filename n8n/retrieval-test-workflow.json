@@ -1,0 +1,92 @@
+{
+  "name": "Order Pilot - Retrieval Test",
+  "nodes": [
+    {
+      "id": "webhook-retrieval-test",
+      "name": "Webhook - Retrieval Test",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "retrieval-test",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "get-embedding",
+      "name": "Get Embedding",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 0],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: \"text-embedding-3-small\", input: $json.body.question || \"How long will my delivery take?\" }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "OpenAI API (Header Auth)"
+        }
+      }
+    },
+    {
+      "id": "similarity-search",
+      "name": "Similarity Search",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [440, 0],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=SELECT content, metadata, 1 - (embedding <=> '{{ JSON.stringify($json.data[0].embedding) }}'::vector) AS similarity FROM documents ORDER BY embedding <=> '{{ JSON.stringify($json.data[0].embedding) }}'::vector LIMIT 5",
+        "options": {}
+      },
+      "credentials": {
+        "postgres": {
+          "id": "",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "id": "respond-to-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [660, 0],
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Webhook - Retrieval Test": {
+      "main": [
+        [{ "node": "Get Embedding", "type": "main", "index": 0 }]
+      ]
+    },
+    "Get Embedding": {
+      "main": [
+        [{ "node": "Similarity Search", "type": "main", "index": 0 }]
+      ]
+    },
+    "Similarity Search": {
+      "main": [
+        [{ "node": "Respond to Webhook", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

@@ -1,0 +1,204 @@
+{
+  "name": "Order Pilot - RAG Chat",
+  "nodes": [
+    {
+      "id": "webhook-chat",
+      "name": "Webhook - Chat",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chat",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "get-embedding",
+      "name": "Get Embedding",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 0],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: \"text-embedding-3-small\", input: $json.body.question || \"How long will my delivery take?\" }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "OpenAI API (Header Auth)"
+        }
+      }
+    },
+    {
+      "id": "similarity-search",
+      "name": "Similarity Search",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [440, 0],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=SELECT content, metadata, 1 - (embedding <=> '{{ JSON.stringify($json.data[0].embedding) }}'::vector) AS similarity FROM documents ORDER BY embedding <=> '{{ JSON.stringify($json.data[0].embedding) }}'::vector LIMIT 5",
+        "options": {}
+      },
+      "credentials": {
+        "postgres": {
+          "id": "",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "id": "check-relevance",
+      "name": "Check Relevance",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 0],
+      "parameters": {
+        "jsCode": "const question = $('Webhook - Chat').first().json.body?.question || \"How long will my delivery take?\";\nconst items = $input.all();\nconst topSimilarity = items.length > 0 ? items[0].json.similarity : 0;\nconst context = items.map(item => item.json.content).join(\"\\n\\n---\\n\\n\");\nconst THRESHOLD = 0.2;\nreturn [{ json: { question, context, topSimilarity, belowThreshold: topSimilarity < THRESHOLD } }];"
+      }
+    },
+    {
+      "id": "relevance-check",
+      "name": "Relevance Check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [880, 0],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "below-threshold",
+              "leftValue": "={{ $json.belowThreshold }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "no-match-response",
+      "name": "No Match Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1100, 100],
+      "parameters": {
+        "jsCode": "return [{ json: { answer: \"I'm not able to find information about that in our knowledge base. For further help, please email dennisphx18@gmail.com or message us on Facebook at https://www.facebook.com/dennis.hermoso1.\" } }];"
+      }
+    },
+    {
+      "id": "ask-claude",
+      "name": "Ask Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1100, -100],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "anthropicApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "anthropic-version", "value": "2023-06-01" },
+            { "name": "content-type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: \"claude-sonnet-5\", max_tokens: 1024, system: \"You are a customer support assistant for an online food delivery store. Answer the customer's question using ONLY the context below. If the context doesn't contain the answer, say you're not sure and suggest contacting support directly. Be concise and friendly.\\n\\nContext:\\n\" + $json.context, messages: [ { role: \"user\", content: $json.question } ] }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "anthropicApi": {
+          "id": "",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "id": "format-response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1320, -100],
+      "parameters": {
+        "jsCode": "const reply = $json.content?.[0]?.text ?? \"Sorry, I couldn't generate a response.\";\nreturn [{ json: { answer: reply } }];"
+      }
+    },
+    {
+      "id": "respond-to-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1540, 0],
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Webhook - Chat": {
+      "main": [
+        [{ "node": "Get Embedding", "type": "main", "index": 0 }]
+      ]
+    },
+    "Get Embedding": {
+      "main": [
+        [{ "node": "Similarity Search", "type": "main", "index": 0 }]
+      ]
+    },
+    "Similarity Search": {
+      "main": [
+        [{ "node": "Check Relevance", "type": "main", "index": 0 }]
+      ]
+    },
+    "Check Relevance": {
+      "main": [
+        [{ "node": "Relevance Check", "type": "main", "index": 0 }]
+      ]
+    },
+    "Relevance Check": {
+      "main": [
+        [{ "node": "No Match Response", "type": "main", "index": 0 }],
+        [{ "node": "Ask Claude", "type": "main", "index": 0 }]
+      ]
+    },
+    "No Match Response": {
+      "main": [
+        [{ "node": "Respond to Webhook", "type": "main", "index": 0 }]
+      ]
+    },
+    "Ask Claude": {
+      "main": [
+        [{ "node": "Format Response", "type": "main", "index": 0 }]
+      ]
+    },
+    "Format Response": {
+      "main": [
+        [{ "node": "Respond to Webhook", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
