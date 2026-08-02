@@ -239,9 +239,107 @@ Production webhooks activated (2026-08-02) — both workflows Published/Active i
   tab (production runs don't show live on the canvas — only test-URL runs do). Always verify
   a hand-edited Code node against the Test URL before (re-)publishing to production.
 
+Phase 3 (chat widget) — webhook contract verified against production (2026-08-02):
+
+Widget files now live in `widget/` (order-pilot-widget.js, demo.html, WIDGET_README.md).
+They were authored outside the repo and moved in during this session; the three assumptions
+they were built on were then checked by probing the live production webhook directly (curl
+against https://dmhermoso.cloud/webhook/chat), not read off a summary. Two of the three were
+wrong. These are the verified facts:
+
+1. **Response shape is a JSON ARRAY, not an object.** The Respond to Webhook node uses
+   `respondWith: "allIncomingItems"`, which serializes the incoming items array. A successful
+   call returns:
+   `[{"answer":"We're open daily from 10 AM to 7 PM..."}]`
+   The field name is `answer`, but it is nested inside an array. Widget parsing must be
+   `data[0].answer` (or `data?.[0]?.answer`). Code written against `data.answer` yields
+   `undefined` and renders an empty/"undefined" bubble with no error — the request still
+   returns HTTP 200, so it fails silently. Confirmed identical shape on all five routes
+   (FAQ hit, FAQ no-match, order-status success, order-status verification-fail, complaint).
+
+2. **sessionId is completely ignored — there is no multi-turn context or slot-filling.**
+   Nothing in the workflow reads it: the webhook passes the raw body to Classify Intent, which
+   reads only `$json.body?.question` and outputs a flat `{question, intent, orderNumber, email}`.
+   There is no memory node, no state store, no session key anywhere in either workflow.
+   Verified decisively in production: sent `{"question":"My order number is 754 and my email is
+   orderpilot.test@example.com","sessionId":"X"}` (→ correct full order summary), then
+   `{"question":"What is the status of my order?","sessionId":"X"}` on the same sessionId →
+   "To look up your order, could you share your order number and the email address...".
+   It asked for details it had been given one turn earlier. Every message is stateless and
+   self-contained. Consequence: the customer must put the order number AND email in a single
+   message or the lookup cannot work. A widget may still generate/send a sessionId for future
+   use or logging, but it must not be presented as conversation memory, and the widget UX
+   should nudge users to include both details in one message.
+
+3. **CORS is already working — no n8n change needed.** This was assumed to be missing; it is
+   not. The webhook node has no explicit `allowedOrigins` set (`options: {}`), and n8n's
+   default behaviour is to allow all origins and reflect the caller's Origin back. Verified:
+   `OPTIONS` preflight → `204` with `Access-Control-Allow-Origin: <origin echoed>`,
+   `Access-Control-Allow-Methods: OPTIONS, POST`, `Access-Control-Allow-Headers: content-type`,
+   `Access-Control-Max-Age: 300`. Confirmed reflecting both an arbitrary origin
+   (https://example.com) and the real store origin (https://xn--cocinia-9za.com). A browser
+   `fetch` with `Content-Type: application/json` from the live store will work as-is.
+   **But** the flip side is that the endpoint is open to every origin on the internet — see
+   the security/cost item in Open items below.
+
+Widget state after this session's fixes:
+- `extractReplyText()` already unwrapped the array correctly (it falls through the
+  field-name loop, then recurses into `data[0]`), so item 1 needed no code change — but the
+  README described it wrongly and has been corrected.
+- **Fixed a real dead end caused by item 2.** Reproduced in the widget against production:
+  "Where is my order?" → bot asks for order number + email → user types "754" → the reply was
+  the off-topic *"I'm not able to find information about that in our knowledge base"* message.
+  Cause: a bare number matches no ORDER_KEYWORD and has no accompanying email, so Classify
+  Intent labels it `faq` and it goes to the RAG path. Since the backend is stateless by
+  design, the fix is client-side slot filling in the widget: it now watches for the
+  ask-for-order-info reply, harvests an order number/email from subsequent messages, and once
+  it has both, sends one canonical `"What is the status of order N? My email is E"` request.
+  If only one piece is known it asks for the missing piece locally, with no backend call —
+  so the incomplete turn costs nothing. Verified end-to-end: the same three-turn exchange now
+  returns the real order summary. Bare numbers are only treated as order numbers while the
+  widget is actually awaiting one, so ordinary messages containing digits are unaffected.
+- Default welcome message now tells customers to include order number + email up front,
+  matching what the stateless backend can actually resolve.
+- No n8n workflow changes were needed or made this session.
+
+Production route verification (2026-08-02, all against the live production webhook):
+- FAQ in-scope ("What are your delivery hours?") → grounded Claude answer.
+- FAQ off-topic ("Who won the world cup in 1998?") → canned no-match reply.
+- Order status success (order 754 + correct billing email in one message) → full order summary.
+- Order status wrong email → generic verification-failed message (no field-level leak).
+- Complaint ("arrived cold and very late... want a refund") → escalation stub. The expanded
+  COMPLAINT_KEYWORDS fix from Phase 2 is confirmed live and working.
+
 Open items:
+- **The chat webhook is unauthenticated, unthrottled, and open to all origins.** Once the URL
+  is embedded in public page JavaScript it is trivially discoverable, and every POST costs an
+  OpenAI embedding call plus (on the FAQ path) a Claude Sonnet call. There is no API key, no
+  rate limit, no origin restriction, and no per-session cap. This is the single biggest thing
+  to address before putting the widget on the live store. Options: set the webhook node's
+  `allowedOrigins` to the store domain (note: this is a browser-enforced control only, it does
+  not stop curl), add a shared secret header, and/or put rate limiting in front of it at nginx.
+- **`Get Embedding` has a hardcoded fallback question that masks bad input.** Its jsonBody is
+  `input: $json.question || "How long will my delivery take?"`. Any request with a missing,
+  empty, or misnamed question key silently returns a confident delivery-time answer with HTTP
+  200 instead of an error — verified live by POSTing `{"message":"this uses the wrong key"}`,
+  which returned "Delivery typically takes 15-30 minutes...". `Check Relevance` has the same
+  hardcoded fallback. These should be replaced with an explicit validation branch that returns
+  a real error, otherwise widget bugs will be invisible in testing.
 - Confirm WooCommerce order IDs match customer-facing order numbers (no custom order-number
   plugin) — order-lookup assumes they're the same.
+- Order 754's summary renders "Total: PHP 0.00" — likely an artifact of creating the test order
+  via the REST API without line-item pricing, but confirm real orders render a correct total,
+  since this string is shown verbatim to customers.
+- The order-lookup success response includes the full delivery street address, gated only by a
+  billing-email match. Email is a weak second factor for a food delivery service (it is often
+  known or guessable). Worth deciding whether the address should be partially masked.
+- n8n's Overview showed 1 failed production execution out of 12 (8.3% failure rate) — worth
+  checking the Executions tab to see which call failed and why.
+- Unverified at config level: the n8n session expired partway through inspecting the live
+  webhook node in the editor UI, so the CORS/sessionId findings above rest on production
+  request/response behaviour rather than on reading the node parameters on screen. The
+  behavioural evidence is decisive for widget purposes, but re-confirm in the editor if the
+  exact `allowedOrigins` value matters.
 - Product categories all show "Uncategorized" in WooCommerce — confirm if intentional
 - Production webhook activation ("Publish"/Active toggle) didn't reliably work during
   testing — needs investigation before relying on it for a live frontend (the order-lookup
@@ -252,7 +350,14 @@ Open items:
 - Intent classification heuristic (keyword/regex based) is untuned — no real traffic tested
   yet, may need keyword list expansion or a fallback LLM classifier if misclassification shows
   up
-- Custom chat widget frontend not started
+- Chat widget exists in `widget/` and is verified working against production for all three
+  intents, but is **not yet embedded on the live store** — that should wait until the
+  open/unthrottled webhook above is addressed.
+- Claude's answers sometimes contain markdown (`**bold**`), which the widget renders literally
+  because message text goes through `textContent` for XSS safety. Fix by constraining the
+  system prompt to plain text or adding a strictly-allowlisted renderer — do not switch the
+  bubble to `innerHTML`, since that text comes from an LLM.
+- The widget test used `python -m http.server` on 127.0.0.1 rather than `file://`, so the
+  browser sent a real Origin and CORS was genuinely exercised. Keep testing that way.
 - Email escalation (Phase 3+?) — Escalation Stub is a placeholder canned reply only, no actual
   email is sent yet
-- Phase 3+ scope not yet defined
