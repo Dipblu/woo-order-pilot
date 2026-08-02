@@ -89,14 +89,170 @@ n8n workflows (Phase 1 complete — retrieval wired into n8n and verified):
 - Similarity threshold (0.2) is an untuned starting point based on a handful of manual test
   queries, not real traffic — revisit once there's actual usage data.
 
+Phase 2 (Order Lookup Tool + Core Agent Logic) — built:
+
+Decisions:
+- Identity verification: order number + billing email must both match via the WooCommerce
+  order lookup. On any mismatch (wrong number, wrong email, or order not found), the customer
+  gets one generic "couldn't verify" message — the response never reveals which piece was
+  wrong, so a wrong order number can't be distinguished from a wrong email (avoids leaking
+  which order numbers are valid).
+- Complaints/anything not confidently resolvable route to an escalation stub (canned "flagged
+  for a human, email us if urgent" reply) rather than being answered — full email escalation
+  build is a later phase.
+- Intent classification is a **free heuristic Code node** (regex + keyword matching), not an
+  extra Claude call. Reasoning: the existing flow already spends zero LLM cost on off-topic
+  questions (similarity check short-circuits before ever calling Claude). Adding an upfront
+  Claude classification call would have meant paying for a Claude call on *every* message,
+  including ones that end up being canned no-match replies today — a real cost regression.
+  The heuristic router (keyword lists for order-status vs. complaint intent, regex for order
+  number + email extraction) runs before anything else and costs nothing; only the FAQ
+  fallback path reaches Claude, same as before. Tradeoff: lower recall than an LLM classifier
+  for unusually-phrased messages — acceptable for v1, revisit if real traffic shows
+  misclassification.
+
+n8n/order-lookup-workflow.json (new, "Order Pilot - Order Lookup"):
+- Two triggers feeding the same logic: "Webhook - Order Lookup" (POST /order-lookup, body
+  { orderNumber, email }) for standalone testing/curl, and "When Executed by Another Workflow"
+  (Execute Workflow Trigger) so the main chat workflow can call it directly without depending
+  on webhook publish/activation at all — sidesteps the flaky Publish/Active toggle noted in
+  Phase 1.
+- Normalize Input (Code) — detects which trigger fired by shape (`$json.body` present =
+  webhook), trims/lowercases email.
+- Get Order — native WooCommerce node (credential "WooCommerce account 2"), resource "order",
+  operation "get", orderId = orderNumber. continueOnFail true so a 404 becomes a checkable
+  `error` field instead of crashing the workflow. Assumption: the customer-facing order number
+  equals the WooCommerce order ID (true by default; would need adjusting if a custom
+  order-numbering plugin is in use — worth confirming).
+- Verify & Build Response (Code) — compares lowercased order.billing.email to the provided
+  email; only on exact match does it build the real order summary (status, line items, total,
+  delivery address from shipping or billing). Any failure (bad number, bad email, not found)
+  returns the same generic verification-failed message.
+- Called Via Webhook? (IF) — routes to Respond to Webhook when triggered standalone, or to a
+  no-op terminal node when called as a sub-workflow (Execute Workflow just returns the last
+  node's output, no explicit response needed).
+- **Post-import step required**: open the "Execute Order Lookup" node in the main chat
+  workflow and re-select "Order Pilot - Order Lookup" from its workflow dropdown — the target
+  workflow ID is assigned by n8n at import time and can't be hardcoded in the JSON file.
+
+n8n/rag-chat-workflow.json (updated) — new nodes inserted right after the webhook:
+- Classify Intent (Code) — regex-extracts an email and an order-number-looking token from the
+  message, checks keyword lists for order-status phrases ("track my", "where is my", etc.) and
+  complaint phrases ("refund", "never arrived", "manager", "escalate", etc.). Priority:
+  complaint > order_status > faq (default). Outputs { question, intent, orderNumber, email }.
+- Is Complaint? (IF) → true: Escalation Stub (canned reply) → Respond to Webhook.
+- Is Order Status? (IF, false branch of above) → true: Have Order Info? (IF checking both
+  orderNumber and email were extracted) →
+  - true: Execute Order Lookup (Execute Workflow node → order-lookup workflow) → Format Order
+    Response (wraps the sub-workflow's `message` into `answer`) → Respond to Webhook
+  - false: Ask For Order Info (canned "please share your order number and email") → Respond
+    to Webhook
+  - false branch of Is Order Status?: falls through to the existing FAQ path unchanged (Get
+    Embedding → Similarity Search → Check Relevance → Relevance Check → Ask Claude / No Match
+    Response → Format Response), which still all converges on the same Respond to Webhook node.
+- Bug caught and fixed while wiring this up: Get Embedding originally read
+  `$json.body.question` directly off the webhook item; since Classify Intent now sits between
+  the webhook and Get Embedding and flattens the shape to `{ question, intent, ... }` (no
+  nested `.body`), Get Embedding was updated to read `$json.question` instead.
+
+Testing the order-lookup path end-to-end:
+1. In WooCommerce admin, find or create a test order; note its order ID/number and the
+   billing email on that order.
+2. Import n8n/order-lookup-workflow.json as its own workflow, then re-point the main
+   workflow's "Execute Order Lookup" node at it (see post-import step above).
+3. Standalone test (bypasses the chat flow entirely) — open the order-lookup workflow, click
+   "Listen for test event" on Webhook - Order Lookup, then:
+   - Success case: POST to the webhook-test URL with
+     `{ "orderNumber": "<real id>", "email": "<real billing email>" }` — expect
+     `{ success: true, message: "Order #... status: ...", order: {...} }`.
+   - Failure case: same orderNumber but a wrong/different email — expect
+     `{ success: false, message: "We couldn't verify..." }`. Repeat with a wrong orderNumber
+     and the correct email to confirm the message is identical either way (no leak of which
+     field was wrong).
+4. End-to-end through the chat flow — open rag-chat-workflow, click "Listen for test event"
+   on Webhook - Chat, then POST
+   `{ "question": "What's the status of order <id>, my email is <billing email>" }` to the
+   chat webhook-test URL — expect intent to route to order_status and a real order summary
+   back. Repeat with a mismatched email in the same phrasing to confirm the generic failure
+   message comes back through the full chat path, and try a message with only an order number
+   (no email) to confirm it asks for the missing info instead of guessing.
+5. Sanity-check the other two routes still work post-change: a complaint-flavored message
+   ("this order never arrived, I want a refund") should hit the Escalation Stub reply, and the
+   original FAQ questions from Phase 1 testing should still reach Claude/no-match exactly as
+   before.
+
+Phase 2 verified live end-to-end (2026-08-02) — both workflows imported into the real n8n
+instance (dmhermoso.cloud) and tested against a real WooCommerce test order (order #754,
+billing email orderpilot.test@example.com, created via the REST API for this test since the
+store had no existing orders):
+- Order-lookup sub-workflow tested standalone via its own webhook: correct number+email →
+  full order summary; wrong email → generic fail; wrong (nonexistent) order number → identical
+  generic fail message (confirms no leak of which field was wrong).
+- Main chat workflow tested end-to-end via the chat webhook for all routes: order-status
+  success, order-status wrong email, order-status with missing info (asks for order number +
+  email instead of guessing), complaint → escalation stub, FAQ in-scope (grounded Claude
+  answer), FAQ off-topic (canned no-match reply). All six passed.
+- Import gotchas hit and fixed along the way, worth remembering for future n8n workflow
+  imports on this instance:
+  - Hand-authored node `position` coordinates that reuse the same x/y as other nodes (e.g.
+    inserting new nodes without shifting the existing chain) cause nodes to visually overlap
+    on the canvas, making them nearly impossible to click/select in the editor. Give new nodes
+    plenty of vertical/horizontal clearance (≥150px) from existing ones when hand-editing
+    workflow JSON.
+  - Credentials referenced by name with an empty `id` in imported JSON do NOT always
+    auto-match on import — WooCommerce and Anthropic credentials happened to auto-bind
+    correctly, but the OpenAI (Header Auth) and Postgres credentials did not and silently
+    showed the right name with a broken binding ("Credentials not found" only surfaced at
+    execution time). After importing a workflow JSON with credentials, re-open every node that
+    has one and reselect it from the dropdown even if the name already looks populated.
+  - Execute Workflow node → sub-workflow references (`workflowId`) are never valid after
+    import since n8n assigns the ID at import time; the node showed a red warning until the
+    target workflow was manually reselected from the "From list" dropdown.
+  - An Execute Workflow Trigger node with no input schema defined throws "At least 1 field is
+    required" when called — set "Input data mode" to "Accept all data" (not "Define using
+    fields below" left empty) for sub-workflows that should just pass through whatever the
+    caller sends.
+  - This n8n instance's canvas "Zoom to Fit" button was unreliable for large/spread-out
+    workflows (repeatedly centered on empty space); manually clicking "Zoom Out" several times
+    was the reliable way to bring all nodes into view.
+
+Production webhooks activated (2026-08-02) — both workflows Published/Active in n8n:
+- Order-lookup: https://dmhermoso.cloud/webhook/order-lookup — tested directly (success +
+  wrong-email cases), both correct.
+- Chat: https://dmhermoso.cloud/webhook/chat — tested for all three intents, all correct.
+- Important: the chat webhook expects the JSON body key to be `question`, not `message`
+  (`{"question": "..."}`). Sending `message` results in every request silently falling through
+  to Classify Intent's empty-string default and Get Embedding's hardcoded fallback text,
+  returning the same canned delivery-time answer regardless of what was actually asked — no
+  error, just a wrong-looking but "successful" response. The real chat widget must send the
+  `question` key.
+- Found and fixed a real classification gap: a complaint like "my order arrived cold... very
+  late... very unhappy" matched no complaint keyword but did match the order-status keyword
+  "my order", so it got routed to order-lookup instead of escalation. Expanded
+  COMPLAINT_KEYWORDS (added unhappy, arrived cold, very late, angry, upset, frustrated, rude,
+  damaged, broken, spoiled, horrible, etc.) — confirms the heuristic needs ongoing tuning as
+  real phrasing surfaces gaps, exactly as flagged as an open item after Phase 2's first build.
+- Gotcha hit while editing a Code node's JS directly in the n8n web editor via automated
+  typing: the editor auto-closes brackets/quotes, so typing already-closed code (e.g. a
+  trailing `}];`) produces duplicated stray closing tokens and a silent syntax error that only
+  surfaces at execution time ("Unexpected token ')'"). Caught via the workflow's Executions
+  tab (production runs don't show live on the canvas — only test-URL runs do). Always verify
+  a hand-edited Code node against the Test URL before (re-)publishing to production.
+
 Open items:
-- Order identity verification approach (how to confirm a customer before showing order
-  details) — not yet decided
-- Complaint escalation is routing-only logic, no RAG content needed
+- Confirm WooCommerce order IDs match customer-facing order numbers (no custom order-number
+  plugin) — order-lookup assumes they're the same.
 - Product categories all show "Uncategorized" in WooCommerce — confirm if intentional
 - Production webhook activation ("Publish"/Active toggle) didn't reliably work during
-  testing — needs investigation before relying on it for a live frontend
+  testing — needs investigation before relying on it for a live frontend (the order-lookup
+  sub-workflow sidesteps this for the chat-flow call path by using Execute Workflow instead of
+  a second webhook, but the sub-workflow's own standalone webhook would still hit this if
+  ever exposed directly to a frontend)
 - Similarity threshold (0.2) untuned, needs revisiting with real usage data
+- Intent classification heuristic (keyword/regex based) is untuned — no real traffic tested
+  yet, may need keyword list expansion or a fallback LLM classifier if misclassification shows
+  up
 - Custom chat widget frontend not started
-- Phase 2+ scope not yet defined (order lookups, identity verification, escalation routing,
-  widget)
+- Email escalation (Phase 3+?) — Escalation Stub is a placeholder canned reply only, no actual
+  email is sent yet
+- Phase 3+ scope not yet defined

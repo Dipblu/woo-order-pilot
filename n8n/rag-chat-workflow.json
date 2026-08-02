@@ -15,11 +15,147 @@
       }
     },
     {
+      "id": "classify-intent",
+      "name": "Classify Intent",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0],
+      "parameters": {
+        "jsCode": "const message = ($json.body?.question || '').trim();\nconst lower = message.toLowerCase();\n\nconst emailMatch = message.match(/[\\w.+-]+@[\\w-]+\\.[\\w.-]+/);\nconst orderNumMatch = lower.match(/order\\s*#?\\s*(\\d{2,8})/) || message.match(/#(\\d{2,8})\\b/) || (emailMatch ? message.match(/\\b(\\d{2,8})\\b/) : null);\n\nconst ORDER_KEYWORDS = ['order status', 'my order', 'track my', 'where is my', 'delivery status', 'has my order', 'status of my order'];\nconst COMPLAINT_KEYWORDS = ['refund', 'complaint', 'cancel my order', 'terrible', 'awful', 'worst', 'unacceptable', 'never arrived', 'missing item', 'wrong item', 'not happy', 'unhappy', 'disappointed', 'compensation', 'manager', 'escalate', 'cold food', 'arrived cold', 'very late', 'rude', 'poor service', 'bad experience', 'ridiculous', 'angry', 'upset', 'frustrated', 'damaged', 'broken', 'spoiled', 'horrible'];\n\nconst looksLikeOrderQuery = Boolean(emailMatch && orderNumMatch) || ORDER_KEYWORDS.some((k) => lower.includes(k));\nconst looksLikeComplaint = COMPLAINT_KEYWORDS.some((k) => lower.includes(k));\n\nlet intent = 'faq';\nif (looksLikeComplaint) intent = 'complaint';\nelse if (looksLikeOrderQuery) intent = 'order_status';\n\nreturn [{\n  json: {\n    question: message,\n    intent,\n    orderNumber: orderNumMatch ? orderNumMatch[1] : null,\n    email: emailMatch ? emailMatch[0].toLowerCase() : null,\n  },\n}];"
+      }
+    },
+    {
+      "id": "is-complaint",
+      "name": "Is Complaint?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [440, 0],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "complaint-check",
+              "leftValue": "={{ $json.intent }}",
+              "rightValue": "complaint",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "escalation-stub",
+      "name": "Escalation Stub",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 250],
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    answer: \"I'm sorry you're having trouble. I've flagged this conversation for a team member to follow up by email as soon as possible. If it's urgent, you can also reach us directly at dennisphx18@gmail.com.\",\n  },\n}];"
+      }
+    },
+    {
+      "id": "is-order-status",
+      "name": "Is Order Status?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [660, 0],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "order-status-check",
+              "leftValue": "={{ $json.intent }}",
+              "rightValue": "order_status",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "have-order-info",
+      "name": "Have Order Info?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [880, -100],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "has-both",
+              "leftValue": "={{ Boolean($json.orderNumber && $json.email) }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "execute-order-lookup",
+      "name": "Execute Order Lookup",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [1100, -350],
+      "notes": "After importing, open this node and re-select 'Order Pilot - Order Lookup' from the workflow dropdown -- the target workflow ID is assigned by n8n on import and can't be hardcoded in this file.",
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list",
+          "cachedResultName": "Order Pilot - Order Lookup"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "format-order-response",
+      "name": "Format Order Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1320, -350],
+      "parameters": {
+        "jsCode": "return [{ json: { answer: $json.message } }];"
+      }
+    },
+    {
+      "id": "ask-for-order-info",
+      "name": "Ask For Order Info",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1100, -100],
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    answer: \"To look up your order, could you share your order number and the email address used when placing it?\",\n  },\n}];"
+      }
+    },
+    {
       "id": "get-embedding",
       "name": "Get Embedding",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [220, 0],
+      "position": [660, 500],
       "parameters": {
         "method": "POST",
         "url": "https://api.openai.com/v1/embeddings",
@@ -27,7 +163,7 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ model: \"text-embedding-3-small\", input: $json.body.question || \"How long will my delivery take?\" }) }}",
+        "jsonBody": "={{ JSON.stringify({ model: \"text-embedding-3-small\", input: $json.question || \"How long will my delivery take?\" }) }}",
         "options": {}
       },
       "credentials": {
@@ -42,7 +178,7 @@
       "name": "Similarity Search",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
-      "position": [440, 0],
+      "position": [880, 500],
       "parameters": {
         "operation": "executeQuery",
         "query": "=SELECT content, metadata, 1 - (embedding <=> '{{ JSON.stringify($json.data[0].embedding) }}'::vector) AS similarity FROM documents ORDER BY embedding <=> '{{ JSON.stringify($json.data[0].embedding) }}'::vector LIMIT 5",
@@ -60,7 +196,7 @@
       "name": "Check Relevance",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [660, 0],
+      "position": [1100, 500],
       "parameters": {
         "jsCode": "const question = $('Webhook - Chat').first().json.body?.question || \"How long will my delivery take?\";\nconst items = $input.all();\nconst topSimilarity = items.length > 0 ? items[0].json.similarity : 0;\nconst context = items.map(item => item.json.content).join(\"\\n\\n---\\n\\n\");\nconst THRESHOLD = 0.2;\nreturn [{ json: { question, context, topSimilarity, belowThreshold: topSimilarity < THRESHOLD } }];"
       }
@@ -70,7 +206,7 @@
       "name": "Relevance Check",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [880, 0],
+      "position": [1320, 500],
       "parameters": {
         "conditions": {
           "options": {
@@ -96,7 +232,7 @@
       "name": "No Match Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1100, 100],
+      "position": [1540, 650],
       "parameters": {
         "jsCode": "return [{ json: { answer: \"I'm not able to find information about that in our knowledge base. For further help, please email dennisphx18@gmail.com or message us on Facebook at https://www.facebook.com/dennis.hermoso1.\" } }];"
       }
@@ -106,7 +242,7 @@
       "name": "Ask Claude",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1100, -100],
+      "position": [1540, 350],
       "parameters": {
         "method": "POST",
         "url": "https://api.anthropic.com/v1/messages",
@@ -136,7 +272,7 @@
       "name": "Format Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1320, -100],
+      "position": [1760, 350],
       "parameters": {
         "jsCode": "const reply = $json.content?.[0]?.text ?? \"Sorry, I couldn't generate a response.\";\nreturn [{ json: { answer: reply } }];"
       }
@@ -146,7 +282,7 @@
       "name": "Respond to Webhook",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [1540, 0],
+      "position": [1980, 150],
       "parameters": {
         "respondWith": "allIncomingItems",
         "options": {}
@@ -156,7 +292,50 @@
   "connections": {
     "Webhook - Chat": {
       "main": [
+        [{ "node": "Classify Intent", "type": "main", "index": 0 }]
+      ]
+    },
+    "Classify Intent": {
+      "main": [
+        [{ "node": "Is Complaint?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Is Complaint?": {
+      "main": [
+        [{ "node": "Escalation Stub", "type": "main", "index": 0 }],
+        [{ "node": "Is Order Status?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Escalation Stub": {
+      "main": [
+        [{ "node": "Respond to Webhook", "type": "main", "index": 0 }]
+      ]
+    },
+    "Is Order Status?": {
+      "main": [
+        [{ "node": "Have Order Info?", "type": "main", "index": 0 }],
         [{ "node": "Get Embedding", "type": "main", "index": 0 }]
+      ]
+    },
+    "Have Order Info?": {
+      "main": [
+        [{ "node": "Execute Order Lookup", "type": "main", "index": 0 }],
+        [{ "node": "Ask For Order Info", "type": "main", "index": 0 }]
+      ]
+    },
+    "Execute Order Lookup": {
+      "main": [
+        [{ "node": "Format Order Response", "type": "main", "index": 0 }]
+      ]
+    },
+    "Format Order Response": {
+      "main": [
+        [{ "node": "Respond to Webhook", "type": "main", "index": 0 }]
+      ]
+    },
+    "Ask For Order Info": {
+      "main": [
+        [{ "node": "Respond to Webhook", "type": "main", "index": 0 }]
       ]
     },
     "Get Embedding": {
