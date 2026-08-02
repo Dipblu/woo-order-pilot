@@ -7,41 +7,28 @@ storage, private window, or call the webhook directly with a fresh UUID). Fine f
 conversation continuity, useless as an abuse gate. IP is the meaningful signal for
 actual abuse.
 
-Caveat: if dmhermoso.cloud sits behind a reverse proxy (nginx, Cloudflare, etc.), the
-webhook node might see the proxy's IP for every request instead of the real visitor IP,
-unless the proxy forwards it via X-Forwarded-For and n8n is configured to trust it.
-Verify by sending test requests from two different networks and checking if the
-captured IP differs.
+### Which header to trust (confirmed against a live execution)
 
-### X-Forwarded-For is only trustworthy from the right
+dmhermoso.cloud sits behind nginx, and its behaviour has been verified directly from an
+n8n execution rather than assumed:
 
-`X-Forwarded-For` is append-only: each proxy appends the address it received the request
-from, on the **right**. Everything to the left of your own trusted hops is whatever the
-*client* sent, and is therefore forgeable.
+- **`x-real-ip` is set by nginx to the actual visitor IP.** It is not client-controlled —
+  nginx overwrites whatever the caller sends. This is the primary source.
+- **`x-forwarded-for` has the real visitor IP appended on the right** by nginx, as
+  expected for an append-only forwarding header.
 
-This makes the obvious `split(',')[0]` — the leftmost entry — exactly the wrong element
-to read. An attacker who sends a random `X-Forwarded-For` on each request gets a fresh
-counter bucket every time and is never limited, which defeats the entire mechanism. It
-also has a second failure mode in the other direction: everyone behind one corporate NAT
-or campus gateway collapses into a single bucket and throttles each other.
+So the limiter reads `x-real-ip` first: it's a single value with no parsing, and nginx
+replaces rather than appends it, which removes a whole class of ordering mistakes.
 
-So: count from the right, skipping the number of proxies you actually control.
+`x-forwarded-for` remains only as a fallback for the case where `x-real-ip` is somehow
+absent — and when used, it must be read from the **right**. The header is append-only:
+each proxy appends the address it received the request from, so the rightmost entry is
+the one nginx wrote and everything to its left is caller-supplied and forgeable. Reading
+the obvious `split(',')[0]` would take exactly the forgeable element, letting an attacker
+rotate the header per request for a fresh counter bucket every time and bypass the
+limiter entirely.
 
-**Determine `TRUSTED_PROXY_HOPS` before relying on this.** Send a request with a junk
-header from an external network:
-
-```
-curl -s -X POST https://dmhermoso.cloud/webhook/chat \
-  -H "Content-Type: application/json" \
-  -H "X-Forwarded-For: 203.0.113.99" \
-  -d '{"question":"test"}'
-```
-
-Then read the captured `x-forwarded-for` in that execution (n8n → Executions → the
-webhook node's output). If it shows `203.0.113.99, <your real IP>`, one trusted proxy is
-appending and `TRUSTED_PROXY_HOPS = 1`. If a CDN sits in front too, expect a third entry
-and use `2`. If the junk value arrives alone and unmodified, nothing is appending it —
-`X-Forwarded-For` is unusable here and the limiter must key on something else.
+Either way the chosen value is validated before use — see the Code node below.
 
 ## 1. Table (run once in Supabase SQL editor)
 
@@ -66,27 +53,24 @@ Insert before the existing intent-classifier Code node — everything else stays
 const windowMinutes = 10;
 const limit = 20;
 
-// How many proxies between the internet and n8n append to X-Forwarded-For.
-// MUST be confirmed against a real request first -- see the section above.
-// Too high and you read a forgeable client-supplied value; too low and you
-// bucket every visitor under the proxy's own address.
-const TRUSTED_PROXY_HOPS = 1;
+// nginx sets x-real-ip to the actual visitor IP and overwrites whatever the
+// caller sent, so it is the primary source -- confirmed against a live n8n
+// execution.
+let ip = ($json.headers['x-real-ip'] || '').trim();
 
-// Read from the RIGHT: the rightmost entries were appended by infrastructure
-// we control, everything further left came from the caller and is forgeable.
-const xff = ($json.headers['x-forwarded-for'] || '')
-  .split(',')
-  .map((part) => part.trim())
-  .filter(Boolean);
+// Fallback only if x-real-ip is missing. x-forwarded-for is append-only, so
+// take the RIGHTMOST entry: that's the one nginx wrote. Everything to its left
+// is caller-supplied and forgeable.
+if (!ip) {
+  const xff = ($json.headers['x-forwarded-for'] || '')
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean);
+  ip = xff.length ? xff[xff.length - 1] : '';
+}
 
-let ip =
-  xff.length >= TRUSTED_PROXY_HOPS
-    ? xff[xff.length - TRUSTED_PROXY_HOPS]
-    : $json.headers['x-real-ip'] || '';
-
-// This value originates from a caller-supplied header, so it is untrusted even
-// after the positional check. Anything that isn't IP-shaped collapses to a
-// single shared bucket rather than flowing onward.
+// Applies to whichever source was used. Anything not IP-shaped collapses to a
+// single shared bucket rather than flowing onward into the query.
 if (!/^[0-9a-fA-F:.]{1,45}$/.test(ip)) ip = 'unknown';
 
 const windowMs = windowMinutes * 60 * 1000;
@@ -158,13 +142,11 @@ Supabase SQL editor. Neither of those can be done from this repo/CLI.
 Before implementing, in order:
 
 1. Run `migrations/001_rate_limits.sql` in the Supabase SQL editor.
-2. Confirm `TRUSTED_PROXY_HOPS` against a real request (see above). Do not skip this —
-   the wrong value silently makes the limiter either bypassable or overly aggressive,
-   and neither shows up as an error.
-3. Add the three nodes, using **Query Parameters** on the Postgres node.
-4. Verify against the Test URL before republishing — per the Phase 2 note, hand-editing
+2. Add the three nodes, using **Query Parameters** on the Postgres node. (Header
+   handling is already settled — `x-real-ip` is confirmed to carry the real visitor IP.)
+3. Verify against the Test URL before republishing — per the Phase 2 note, hand-editing
    Code nodes in the n8n editor can silently duplicate auto-closed brackets, and
    production runs don't surface on the canvas.
-5. Sanity-check both directions: normal traffic still gets through, and exceeding the
+4. Sanity-check both directions: normal traffic still gets through, and exceeding the
    limit returns the throttle message without an embedding or Claude call (confirm via
    the execution log, not just the reply text).
