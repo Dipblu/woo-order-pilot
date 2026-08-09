@@ -2,40 +2,43 @@
   "name": "Order Pilot - RAG Chat",
   "nodes": [
     {
-      "id": "webhook-chat",
-      "name": "Webhook - Chat",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
-      "position": [0, 0],
       "parameters": {
         "httpMethod": "POST",
         "path": "chat",
         "responseMode": "responseNode",
         "options": {}
-      }
+      },
+      "id": "4a790e0a-c209-4fc3-ad09-0c30a9d8b70a",
+      "name": "Webhook - Chat",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -704,
+        1312
+      ],
+      "webhookId": "4535089a-f51b-4c01-873d-6fdfe3755396"
     },
     {
-      "id": "classify-intent",
+      "parameters": {
+        "jsCode": "const message = ($json.body?.question || '').trim();\nconst lower = message.toLowerCase();\n\nconst emailMatch = message.match(/[\\w.+-]+@[\\w-]+\\.[\\w.-]+/);\nconst orderNumMatch = lower.match(/order\\s*#?\\s*(\\d{2,8})/) || message.match(/#(\\d{2,8})\\b/) || (emailMatch ? message.match(/\\b(\\d{2,8})\\b/) : null);\n\nconst ORDER_KEYWORDS = ['order status', 'my order', 'track my', 'where is my', 'delivery status', 'has my order', 'status of my order'];\nconst COMPLAINT_KEYWORDS = ['refund', 'complaint', 'cancel my order', 'terrible', 'awful', 'worst', 'unacceptable', 'never arrived', 'missing item', 'wrong item', 'not happy', 'unhappy', 'disappointed', 'compensation', 'manager', 'escalate', 'cold food', 'arrived cold', 'very late', 'rude', 'poor service', 'bad experience', 'ridiculous', 'angry', 'upset', 'frustrated', 'damaged', 'broken', 'spoiled', 'horrible'];\n\nconst looksLikeOrderQuery = Boolean(emailMatch && orderNumMatch) || ORDER_KEYWORDS.some((k) => lower.includes(k));\nconst looksLikeComplaint = COMPLAINT_KEYWORDS.some((k) => lower.includes(k));\n\nlet intent = 'faq';\nif (looksLikeComplaint) intent = 'complaint';\nelse if (looksLikeOrderQuery) intent = 'order_status';\n\nreturn [{\n    json: {\n          question: message,\n          intent,\n          orderNumber: orderNumMatch ? orderNumMatch[1] : null,\n          email: emailMatch ? emailMatch[0].toLowerCase() : null,\n    },\n}];"
+      },
+      "id": "06ca62c1-59fc-400a-b2c0-dc8d4e0564bb",
       "name": "Classify Intent",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [220, 0],
-      "parameters": {
-        "jsCode": "const message = ($json.body?.question || '').trim();\nconst lower = message.toLowerCase();\n\nconst emailMatch = message.match(/[\\w.+-]+@[\\w-]+\\.[\\w.-]+/);\nconst orderNumMatch = lower.match(/order\\s*#?\\s*(\\d{2,8})/) || message.match(/#(\\d{2,8})\\b/) || (emailMatch ? message.match(/\\b(\\d{2,8})\\b/) : null);\n\nconst ORDER_KEYWORDS = ['order status', 'my order', 'track my', 'where is my', 'delivery status', 'has my order', 'status of my order'];\nconst COMPLAINT_KEYWORDS = ['refund', 'complaint', 'cancel my order', 'terrible', 'awful', 'worst', 'unacceptable', 'never arrived', 'missing item', 'wrong item', 'not happy', 'unhappy', 'disappointed', 'compensation', 'manager', 'escalate', 'cold food', 'arrived cold', 'very late', 'rude', 'poor service', 'bad experience', 'ridiculous', 'angry', 'upset', 'frustrated', 'damaged', 'broken', 'spoiled', 'horrible'];\n\nconst looksLikeOrderQuery = Boolean(emailMatch && orderNumMatch) || ORDER_KEYWORDS.some((k) => lower.includes(k));\nconst looksLikeComplaint = COMPLAINT_KEYWORDS.some((k) => lower.includes(k));\n\nlet intent = 'faq';\nif (looksLikeComplaint) intent = 'complaint';\nelse if (looksLikeOrderQuery) intent = 'order_status';\n\nreturn [{\n  json: {\n    question: message,\n    intent,\n    orderNumber: orderNumMatch ? orderNumMatch[1] : null,\n    email: emailMatch ? emailMatch[0].toLowerCase() : null,\n  },\n}];"
-      }
+      "position": [
+        240,
+        1584
+      ]
     },
     {
-      "id": "is-complaint",
-      "name": "Is Complaint?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [440, 0],
       "parameters": {
         "conditions": {
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "strict"
+            "typeValidation": "strict",
+            "version": 1
           },
           "combinator": "and",
           "conditions": [
@@ -43,35 +46,45 @@
               "id": "complaint-check",
               "leftValue": "={{ $json.intent }}",
               "rightValue": "complaint",
-              "operator": { "type": "string", "operation": "equals" }
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             }
           ]
         },
         "options": {}
-      }
+      },
+      "id": "fc748e1a-7f6a-4f69-8853-27699468d065",
+      "name": "Is Complaint?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        576,
+        1312
+      ]
     },
     {
-      "id": "escalation-stub",
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    answer: \"I'm sorry you're having trouble. I've flagged this conversation for a team member to follow up by email as soon as possible. If it's urgent, you can also reach us directly at dennisphx18@gmail.com.\",\n  },\n}];"
+      },
+      "id": "f2e38fff-4acb-4470-9124-9a8126178867",
       "name": "Escalation Stub",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [440, 250],
-      "parameters": {
-        "jsCode": "return [{\n  json: {\n    answer: \"I'm sorry you're having trouble. I've flagged this conversation for a team member to follow up by email as soon as possible. If it's urgent, you can also reach us directly at dennisphx18@gmail.com.\",\n  },\n}];"
-      }
+      "position": [
+        576,
+        1568
+      ]
     },
     {
-      "id": "is-order-status",
-      "name": "Is Order Status?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [660, 0],
       "parameters": {
         "conditions": {
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "strict"
+            "typeValidation": "strict",
+            "version": 1
           },
           "combinator": "and",
           "conditions": [
@@ -79,25 +92,32 @@
               "id": "order-status-check",
               "leftValue": "={{ $json.intent }}",
               "rightValue": "order_status",
-              "operator": { "type": "string", "operation": "equals" }
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             }
           ]
         },
         "options": {}
-      }
-    },
-    {
-      "id": "have-order-info",
-      "name": "Have Order Info?",
+      },
+      "id": "1899aded-e99d-405b-9b2c-ef1fcaf5ac8a",
+      "name": "Is Order Status?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [880, -100],
+      "position": [
+        784,
+        1312
+      ]
+    },
+    {
       "parameters": {
         "conditions": {
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "strict"
+            "typeValidation": "strict",
+            "version": 1
           },
           "combinator": "and",
           "conditions": [
@@ -105,57 +125,81 @@
               "id": "has-both",
               "leftValue": "={{ Boolean($json.orderNumber && $json.email) }}",
               "rightValue": true,
-              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
             }
           ]
         },
         "options": {}
-      }
+      },
+      "id": "50337c46-a545-45be-bee2-dd973cb4e27d",
+      "name": "Have Order Info?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1024,
+        1216
+      ]
     },
     {
-      "id": "execute-order-lookup",
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "6fL44bKrTJ62bidQ",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/6fL44bKrTJ62bidQ",
+          "cachedResultName": "Order Pilot - Order Lookup"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "87b7f785-92c5-4574-88c7-dd66bc0befb5",
       "name": "Execute Order Lookup",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
-      "position": [1100, -350],
-      "notes": "After importing, open this node and re-select 'Order Pilot - Order Lookup' from the workflow dropdown -- the target workflow ID is assigned by n8n on import and can't be hardcoded in this file.",
-      "parameters": {
-        "source": "database",
-        "workflowId": {
-          "__rl": true,
-          "value": "",
-          "mode": "list",
-          "cachedResultName": "Order Pilot - Order Lookup"
-        },
-        "options": {}
-      }
+      "position": [
+        1232,
+        960
+      ],
+      "notes": "After importing, open this node and re-select 'Order Pilot - Order Lookup' from the workflow dropdown -- the target workflow ID is assigned by n8n on import and can't be hardcoded in this file."
     },
     {
-      "id": "format-order-response",
+      "parameters": {
+        "jsCode": "return [{ json: { answer: $json.message } }];"
+      },
+      "id": "0ac5cc19-4ee7-49f2-8466-0774f145f32a",
       "name": "Format Order Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1320, -350],
-      "parameters": {
-        "jsCode": "return [{ json: { answer: $json.message } }];"
-      }
+      "position": [
+        1456,
+        960
+      ]
     },
     {
-      "id": "ask-for-order-info",
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    answer: \"To look up your order, could you share your order number and the email address used when placing it?\",\n  },\n}];"
+      },
+      "id": "fcdb1351-e9a0-4e7b-a560-0262a2d7b2f9",
       "name": "Ask For Order Info",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1100, -100],
-      "parameters": {
-        "jsCode": "return [{\n  json: {\n    answer: \"To look up your order, could you share your order number and the email address used when placing it?\",\n  },\n}];"
-      }
+      "position": [
+        1232,
+        1216
+      ]
     },
     {
-      "id": "get-embedding",
-      "name": "Get Embedding",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [660, 500],
       "parameters": {
         "method": "POST",
         "url": "https://api.openai.com/v1/embeddings",
@@ -166,53 +210,63 @@
         "jsonBody": "={{ JSON.stringify({ model: \"text-embedding-3-small\", input: $json.question || \"How long will my delivery take?\" }) }}",
         "options": {}
       },
+      "id": "2c3de703-e4b4-434a-b02c-51cd5e48bf5d",
+      "name": "Get Embedding",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        784,
+        1824
+      ],
       "credentials": {
         "httpHeaderAuth": {
-          "id": "",
+          "id": "0ou3pJ29jMaonr22",
           "name": "OpenAI API (Header Auth)"
         }
       }
     },
     {
-      "id": "similarity-search",
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT content, metadata, 1 - (embedding <=> '{{ JSON.stringify($json.data[0].embedding) }}'::vector) AS similarity FROM documents ORDER BY embedding <=> '{{ JSON.stringify($json.data[0].embedding) }}'::vector LIMIT 5",
+        "options": {}
+      },
+      "id": "9b2a4538-2459-44e1-ab9b-113b5a59406b",
       "name": "Similarity Search",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
-      "position": [880, 500],
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "=SELECT content, metadata, 1 - (embedding <=> '{{ JSON.stringify($json.data[0].embedding) }}'::vector) AS similarity FROM documents ORDER BY embedding <=> '{{ JSON.stringify($json.data[0].embedding) }}'::vector LIMIT 5",
-        "options": {}
-      },
+      "position": [
+        1024,
+        1824
+      ],
       "credentials": {
         "postgres": {
-          "id": "",
+          "id": "nII9UJDNmVB93OrV",
           "name": "Postgres account"
         }
       }
     },
     {
-      "id": "check-relevance",
+      "parameters": {
+        "jsCode": "const question = $('Webhook - Chat').first().json.body?.question || \"How long will my delivery take?\";\nconst items = $input.all();\nconst topSimilarity = items.length > 0 ? items[0].json.similarity : 0;\nconst context = items.map(item => item.json.content).join(\"\\n\\n---\\n\\n\");\nconst THRESHOLD = 0.2;\nreturn [{ json: { question, context, topSimilarity, belowThreshold: topSimilarity < THRESHOLD } }];"
+      },
+      "id": "bb49a57d-af7c-4d72-8d55-ec3bba22a2b7",
       "name": "Check Relevance",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1100, 500],
-      "parameters": {
-        "jsCode": "const question = $('Webhook - Chat').first().json.body?.question || \"How long will my delivery take?\";\nconst items = $input.all();\nconst topSimilarity = items.length > 0 ? items[0].json.similarity : 0;\nconst context = items.map(item => item.json.content).join(\"\\n\\n---\\n\\n\");\nconst THRESHOLD = 0.2;\nreturn [{ json: { question, context, topSimilarity, belowThreshold: topSimilarity < THRESHOLD } }];"
-      }
+      "position": [
+        1232,
+        1824
+      ]
     },
     {
-      "id": "relevance-check",
-      "name": "Relevance Check",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [1320, 500],
       "parameters": {
         "conditions": {
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "strict"
+            "typeValidation": "strict",
+            "version": 1
           },
           "combinator": "and",
           "conditions": [
@@ -220,29 +274,39 @@
               "id": "below-threshold",
               "leftValue": "={{ $json.belowThreshold }}",
               "rightValue": true,
-              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
             }
           ]
         },
         "options": {}
-      }
+      },
+      "id": "27a655aa-97f0-47a3-aabc-cd67a07a9e44",
+      "name": "Relevance Check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1456,
+        1824
+      ]
     },
     {
-      "id": "no-match-response",
+      "parameters": {
+        "jsCode": "return [{ json: { answer: \"I'm not able to find information about that in our knowledge base. For further help, please email dennisphx18@gmail.com or message us on Facebook at https://www.facebook.com/dennis.hermoso1.\" } }];"
+      },
+      "id": "8fbfc2e2-ebcc-4fb2-98b7-e168befa6f5d",
       "name": "No Match Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1540, 650],
-      "parameters": {
-        "jsCode": "return [{ json: { answer: \"I'm not able to find information about that in our knowledge base. For further help, please email dennisphx18@gmail.com or message us on Facebook at https://www.facebook.com/dennis.hermoso1.\" } }];"
-      }
+      "position": [
+        1680,
+        1968
+      ]
     },
     {
-      "id": "ask-claude",
-      "name": "Ask Claude",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [1540, 350],
       "parameters": {
         "method": "POST",
         "url": "https://api.anthropic.com/v1/messages",
@@ -251,8 +315,14 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "anthropic-version", "value": "2023-06-01" },
-            { "name": "content-type", "value": "application/json" }
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
@@ -260,124 +330,393 @@
         "jsonBody": "={{ JSON.stringify({ model: \"claude-sonnet-5\", max_tokens: 1024, system: \"You are a customer support assistant for an online food delivery store. Answer the customer's question using ONLY the context below. If the context doesn't contain the answer, say you're not sure and suggest contacting support directly. Be concise and friendly.\\n\\nContext:\\n\" + $json.context, messages: [ { role: \"user\", content: $json.question } ] }) }}",
         "options": {}
       },
+      "id": "4938ffa7-504b-4d5b-8c7c-1534d1399f1b",
+      "name": "Ask Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        1664
+      ],
       "credentials": {
         "anthropicApi": {
-          "id": "",
+          "id": "mb1S4cxbng9KB97A",
           "name": "Anthropic account"
         }
       }
     },
     {
-      "id": "format-response",
+      "parameters": {
+        "jsCode": "const reply = $json.content?.[0]?.text ?? \"Sorry, I couldn't generate a response.\";\nreturn [{ json: { answer: reply } }];"
+      },
+      "id": "8f428fd6-e3ed-4309-a0a2-398aea1b4d5c",
       "name": "Format Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1760, 350],
-      "parameters": {
-        "jsCode": "const reply = $json.content?.[0]?.text ?? \"Sorry, I couldn't generate a response.\";\nreturn [{ json: { answer: reply } }];"
-      }
+      "position": [
+        1904,
+        1664
+      ]
     },
     {
-      "id": "respond-to-webhook",
-      "name": "Respond to Webhook",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.1,
-      "position": [1980, 150],
       "parameters": {
         "respondWith": "allIncomingItems",
         "options": {}
+      },
+      "id": "ab13f623-e809-49cb-9ded-851d6f8351d6",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2112,
+        1472
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "47e7fbf3-f034-4415-8a8e-d5096fd9731c",
+              "leftValue": "={{ $json.request_count }}",
+              "rightValue": "={{ $('Compute Rate Limit Key').item.json.limit }}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -80,
+        1312
+      ],
+      "id": "eb0995cf-1a3f-4655-a58a-737aa5fa5591",
+      "name": "Over Limit"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO rate_limits (identifier, window_start, request_count)\nVALUES ($1, $2, 1)\nON CONFLICT (identifier, window_start)\nDO UPDATE SET request_count = rate_limits.request_count + 1\nRETURNING request_count;",
+        "options": {
+          "queryReplacement": "={{ $json.rateLimitIp }},{{ $json.windowStart }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -288,
+        1312
+      ],
+      "id": "e830fffa-26f9-4335-9636-9c1af9d76da4",
+      "name": "Upsert Rate Limit",
+      "credentials": {
+        "postgres": {
+          "id": "nII9UJDNmVB93OrV",
+          "name": "Postgres account"
+        }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "const windowMinutes = 10;\nlet ip = $json.headers['x-real-ip'] ||\n  $json.headers['x-forwarded-for']?.split(',').pop()?.trim() ||\n  'unknown';\n\nif (!/^[0-9a-fA-F:.]{1,45}$/.test(ip)) ip = 'unknown';\n\nconst windowMs = windowMinutes * 60 * 1000;\nconst windowStart = new Date(Math.floor(Date.now() / windowMs) * windowMs).toISOString();\n\nreturn [{ json: { ...$json, rateLimitIp: ip, windowStart, limit: 20 } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -496,
+        1312
+      ],
+      "id": "01e6bd8f-58ad-4f46-ab8b-2051568cae73",
+      "name": "Compute Rate Limit Key"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"answer\": \"You're sending messages a little fast — please wait a few minutes and try again, or email us directly.\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        128,
+        1216
+      ],
+      "id": "0d9081b7-e690-417a-a483-0e42c94e0b9e",
+      "name": "True (over limit)"
     }
   ],
+  "pinData": {},
   "connections": {
     "Webhook - Chat": {
       "main": [
-        [{ "node": "Classify Intent", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Compute Rate Limit Key",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Classify Intent": {
       "main": [
-        [{ "node": "Is Complaint?", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Is Complaint?",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Is Complaint?": {
       "main": [
-        [{ "node": "Escalation Stub", "type": "main", "index": 0 }],
-        [{ "node": "Is Order Status?", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Escalation Stub",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Is Order Status?",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Escalation Stub": {
       "main": [
-        [{ "node": "Respond to Webhook", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Is Order Status?": {
       "main": [
-        [{ "node": "Have Order Info?", "type": "main", "index": 0 }],
-        [{ "node": "Get Embedding", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Have Order Info?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Embedding",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Have Order Info?": {
       "main": [
-        [{ "node": "Execute Order Lookup", "type": "main", "index": 0 }],
-        [{ "node": "Ask For Order Info", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Execute Order Lookup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ask For Order Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Execute Order Lookup": {
       "main": [
-        [{ "node": "Format Order Response", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Format Order Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Format Order Response": {
       "main": [
-        [{ "node": "Respond to Webhook", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Ask For Order Info": {
       "main": [
-        [{ "node": "Respond to Webhook", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Get Embedding": {
       "main": [
-        [{ "node": "Similarity Search", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Similarity Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Similarity Search": {
       "main": [
-        [{ "node": "Check Relevance", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Check Relevance",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Check Relevance": {
       "main": [
-        [{ "node": "Relevance Check", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Relevance Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Relevance Check": {
       "main": [
-        [{ "node": "No Match Response", "type": "main", "index": 0 }],
-        [{ "node": "Ask Claude", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "No Match Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ask Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "No Match Response": {
       "main": [
-        [{ "node": "Respond to Webhook", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Ask Claude": {
       "main": [
-        [{ "node": "Format Response", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Format Response": {
       "main": [
-        [{ "node": "Respond to Webhook", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Over Limit": {
+      "main": [
+        [
+          {
+            "node": "True (over limit)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Classify Intent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Rate Limit": {
+      "main": [
+        [
+          {
+            "node": "Over Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Rate Limit Key": {
+      "main": [
+        [
+          {
+            "node": "Upsert Rate Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
   },
-  "pinData": {}
+  "versionId": "9c795ed7-a214-4f4b-ab37-58fc85fb3abb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6c422960399e48c3a4d8bf32dede75ad1eb6346cc178f3c32bf2211887dab507"
+  },
+  "nodeGroups": [],
+  "id": "OCUB6yBSmVBffeWv",
+  "tags": []
 }
