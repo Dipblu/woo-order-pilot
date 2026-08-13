@@ -3,7 +3,8 @@
 -- Run once in the Supabase SQL editor. Safe to re-run.
 --
 -- Design notes and the accompanying n8n node changes live in
--- widget/RATE_LIMITING.md. Not yet implemented in the live workflow.
+-- widget/RATE_LIMITING.md. Applied to the live database on 2026-08-03; the
+-- limiter is running in production.
 
 CREATE TABLE IF NOT EXISTS rate_limits (
   identifier text NOT NULL,

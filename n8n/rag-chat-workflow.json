@@ -207,7 +207,7 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ model: \"text-embedding-3-small\", input: $json.question || \"How long will my delivery take?\" }) }}",
+        "jsonBody": "={{ JSON.stringify({ model: \"text-embedding-3-small\", input: $('Webhook - Chat').item.json.body.question || \"How long will my delivery take?\" }) }}",
         "options": {}
       },
       "id": "2c3de703-e4b4-434a-b02c-51cd5e48bf5d",
@@ -347,7 +347,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const reply = $json.content?.[0]?.text ?? \"Sorry, I couldn't generate a response.\";\nreturn [{ json: { answer: reply } }];"
+        "jsCode": "const blocks = $json.content ?? [];\nconst textBlock = blocks.find(b => b.type === \"text\");\nconst reply = textBlock?.text ?? \"Sorry, I couldn't generate a response.\";\nreturn [{ json: { answer: reply } }];"
       },
       "id": "8f428fd6-e3ed-4309-a0a2-398aea1b4d5c",
       "name": "Format Response",
@@ -711,7 +711,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "9c795ed7-a214-4f4b-ab37-58fc85fb3abb",
+  "versionId": "dfba05ff-493f-4498-aad1-01748e9e89df",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "6c422960399e48c3a4d8bf32dede75ad1eb6346cc178f3c32bf2211887dab507"

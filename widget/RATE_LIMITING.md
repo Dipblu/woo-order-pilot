@@ -135,18 +135,37 @@ Not urgent — table grows slowly at 10-minute windows.
 
 ## Status
 
-Design only — not yet implemented in the live n8n workflow. Requires manual work in
-the n8n browser UI (add 3 nodes) and running the CREATE TABLE statement in the
-Supabase SQL editor. Neither of those can be done from this repo/CLI.
+**Implemented and live** as of 2026-08-03. The migration was run and the three nodes were
+added to the production chat workflow.
 
-Before implementing, in order:
+Confirmed on 2026-08-09 by querying the `rate_limits` table directly:
 
-1. Run `migrations/001_rate_limits.sql` in the Supabase SQL editor.
-2. Add the three nodes, using **Query Parameters** on the Postgres node. (Header
-   handling is already settled — `x-real-ip` is confirmed to carry the real visitor IP.)
-3. Verify against the Test URL before republishing — per the Phase 2 note, hand-editing
-   Code nodes in the n8n editor can silently duplicate auto-closed brackets, and
-   production runs don't surface on the canvas.
-4. Sanity-check both directions: normal traffic still gets through, and exceeding the
-   limit returns the throttle message without an embedding or Claude call (confirm via
-   the execution log, not just the reply text).
+```
+identifier      window_start          request_count
+112.206.3.200   2026-08-03 11:20Z     8
+112.206.3.200   2026-08-03 11:30Z     13
+112.206.3.200   2026-08-03 11:40Z     21
+```
+
+What that data proves:
+
+- **Real visitor IPs are being recorded**, not the `'unknown'` fallback — so the
+  `x-real-ip` read works against live nginx traffic, as designed.
+- **Window bucketing is correct.** All three `window_start` values land exactly on
+  10-minute boundaries, matching `windowMinutes = 10`.
+- **The upsert increments rather than inserting duplicates** — one row per
+  (identifier, window) with a rising count.
+- **The limit was crossed** (21 > `limit = 20`), so the `Over Limit?` true branch was
+  exercised against real traffic rather than only in theory.
+
+Note the counter keeps incrementing past the limit, since the upsert runs *before* the
+IF check. That's expected with this design, not a bug — but it means the table alone
+can't confirm the throttle reply was actually returned, only that the branch condition
+was met. That part was verified interactively at the time.
+
+### Outstanding
+
+- **The repo's `n8n/rag-chat-workflow.json` has not been re-exported** and still shows
+  the original 17 nodes with no rate-limit nodes. The checked-in copy has drifted from
+  what's running in production. Re-export from n8n and commit.
+- No cleanup job is scheduled yet (see section 3). Not urgent at this row count.

@@ -310,14 +310,27 @@ Production route verification (2026-08-02, all against the live production webho
 - Complaint ("arrived cold and very late... want a refund") → escalation stub. The expanded
   COMPLAINT_KEYWORDS fix from Phase 2 is confirmed live and working.
 
+Phase 4 (rate limiting + go-live) — 2026-08-03:
+- **IP-based rate limiting is implemented and running in production.**
+  `migrations/001_rate_limits.sql` was applied and the three nodes from
+  `widget/RATE_LIMITING.md` were added to the live chat workflow: `Compute Rate Limit Key`
+  (Code) → `Upsert Rate Limit` (Postgres) → `Over Limit?` (IF), ahead of the intent
+  classifier so throttled requests cost no embedding or Claude call.
+- Confirmed against the live table on 2026-08-09: real visitor IPs recorded (not the
+  `'unknown'` fallback, so the `x-real-ip` read works), `window_start` values landing exactly
+  on 10-minute boundaries, counts incrementing per (identifier, window) rather than
+  duplicating rows, and the limit crossed at 21 > 20. Full evidence in
+  `widget/RATE_LIMITING.md`.
+- **The widget is now embedded on the live store**, gated as planned on the limiter landing
+  first. The webhook is therefore serving real customer traffic — several open items below
+  changed from theoretical to customer-facing, most urgently the markdown rendering one.
+
+⚠️ **The repo's `n8n/rag-chat-workflow.json` is stale.** It still contains the original 17
+nodes and none of the rate-limit nodes, so the checked-in copy no longer matches production.
+Re-export from n8n and commit. Until that's done, treat the live workflow as the source of
+truth, not this repo.
+
 Open items:
-- **The chat webhook is unauthenticated, unthrottled, and open to all origins.** Once the URL
-  is embedded in public page JavaScript it is trivially discoverable, and every POST costs an
-  OpenAI embedding call plus (on the FAQ path) a Claude Sonnet call. There is no API key, no
-  rate limit, no origin restriction, and no per-session cap. This is the single biggest thing
-  to address before putting the widget on the live store. Options: set the webhook node's
-  `allowedOrigins` to the store domain (note: this is a browser-enforced control only, it does
-  not stop curl), add a shared secret header, and/or put rate limiting in front of it at nginx.
 - **`Get Embedding` has a hardcoded fallback question that masks bad input.** Its jsonBody is
   `input: $json.question || "How long will my delivery take?"`. Any request with a missing,
   empty, or misnamed question key silently returns a confident delivery-time answer with HTTP
@@ -346,17 +359,19 @@ Open items:
   sub-workflow sidesteps this for the chat-flow call path by using Execute Workflow instead of
   a second webhook, but the sub-workflow's own standalone webhook would still hit this if
   ever exposed directly to a frontend)
-- Similarity threshold (0.2) untuned, needs revisiting with real usage data
-- Intent classification heuristic (keyword/regex based) is untuned — no real traffic tested
-  yet, may need keyword list expansion or a fallback LLM classifier if misclassification shows
-  up
-- Chat widget exists in `widget/` and is verified working against production for all three
-  intents, but is **not yet embedded on the live store** — that should wait until the
-  open/unthrottled webhook above is addressed.
-- Claude's answers sometimes contain markdown (`**bold**`), which the widget renders literally
-  because message text goes through `textContent` for XSS safety. Fix by constraining the
-  system prompt to plain text or adding a strictly-allowlisted renderer — do not switch the
-  bubble to `innerHTML`, since that text comes from an LLM.
+- Similarity threshold (0.2) untuned — real traffic is now flowing, so there is finally data
+  to tune against. Note nothing currently logs the *questions* asked, only IPs in
+  `rate_limits`, so tuning needs either the n8n execution history or a question log.
+- Intent classification heuristic (keyword/regex based) is untuned against real traffic. Now
+  that live customers are using it, misclassification is worth actively checking in the
+  Executions tab rather than waiting for a complaint.
+- **Markdown leaks into customer-visible replies.** Claude's answers sometimes contain
+  `**bold**`, which the widget renders literally because message text goes through
+  `textContent` (`widget/order-pilot-widget.js:378`) for XSS safety. Now that the widget is
+  live this is customer-facing, not cosmetic-in-testing. Fix by constraining the system
+  prompt to plain text and/or adding a strictly-allowlisted renderer that builds DOM nodes —
+  do not switch the bubble to `innerHTML`, since that text comes from an LLM. A prompt-only
+  fix is not fully reliable; models drift back into markdown.
 - The widget test used `python -m http.server` on 127.0.0.1 rather than `file://`, so the
   browser sent a real Origin and CORS was genuinely exercised. Keep testing that way.
 - Email escalation (Phase 3+?) — Escalation Stub is a placeholder canned reply only, no actual
