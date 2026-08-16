@@ -13,22 +13,22 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        -704,
+        -960,
         1312
       ],
       "webhookId": "4535089a-f51b-4c01-873d-6fdfe3755396"
     },
     {
       "parameters": {
-        "jsCode": "const message = ($json.body?.question || '').trim();\nconst lower = message.toLowerCase();\n\nconst emailMatch = message.match(/[\\w.+-]+@[\\w-]+\\.[\\w.-]+/);\nconst orderNumMatch = lower.match(/order\\s*#?\\s*(\\d{2,8})/) || message.match(/#(\\d{2,8})\\b/) || (emailMatch ? message.match(/\\b(\\d{2,8})\\b/) : null);\n\nconst ORDER_KEYWORDS = ['order status', 'my order', 'track my', 'where is my', 'delivery status', 'has my order', 'status of my order'];\nconst COMPLAINT_KEYWORDS = ['refund', 'complaint', 'cancel my order', 'terrible', 'awful', 'worst', 'unacceptable', 'never arrived', 'missing item', 'wrong item', 'not happy', 'unhappy', 'disappointed', 'compensation', 'manager', 'escalate', 'cold food', 'arrived cold', 'very late', 'rude', 'poor service', 'bad experience', 'ridiculous', 'angry', 'upset', 'frustrated', 'damaged', 'broken', 'spoiled', 'horrible'];\n\nconst looksLikeOrderQuery = Boolean(emailMatch && orderNumMatch) || ORDER_KEYWORDS.some((k) => lower.includes(k));\nconst looksLikeComplaint = COMPLAINT_KEYWORDS.some((k) => lower.includes(k));\n\nlet intent = 'faq';\nif (looksLikeComplaint) intent = 'complaint';\nelse if (looksLikeOrderQuery) intent = 'order_status';\n\nreturn [{\n    json: {\n          question: message,\n          intent,\n          orderNumber: orderNumMatch ? orderNumMatch[1] : null,\n          email: emailMatch ? emailMatch[0].toLowerCase() : null,\n    },\n}];"
+        "jsCode": "const message = ($('Webhook - Chat').item.json.body?.question || '').trim();\nconst lower = message.toLowerCase();\n\nconst emailMatch = message.match(/[\\w.+-]+@[\\w-]+\\.[\\w.-]+/);\nconst orderNumMatch = lower.match(/order\\s*#?\\s*(\\d{2,8})/) || message.match(/#(\\d{2,8})\\b/) || (emailMatch ? message.match(/\\b(\\d{2,8})\\b/) : null);\n\nconst ORDER_KEYWORDS = ['order status', 'my order', 'track my', 'where is my', 'delivery status', 'has my order', 'status of my order'];\nconst COMPLAINT_KEYWORDS = ['refund', 'complaint', 'cancel my order', 'terrible', 'awful', 'worst', 'unacceptable', 'never arrived', 'missing item', 'wrong item', 'not happy', 'unhappy', 'disappointed', 'compensation', 'manager', 'escalate', 'cold food', 'arrived cold', 'very late', 'rude', 'poor service', 'bad experience', 'ridiculous', 'angry', 'upset', 'frustrated', 'damaged', 'broken', 'spoiled', 'horrible', 'did not arrive', \"didn't arrive\", \"hasn't arrived\", 'has not arrived', 'have not received', \"haven't received\", 'still waiting', 'not on time', 'late delivery', 'took too long', 'still not here'];\n\n// --- pending state ---\nconst pending = $('Load Pending Intent').item.json;\nconst pendingIntent = pending.pending_intent || null;\nconst suppliedDetails = Boolean(emailMatch || orderNumMatch);\nconst isContinuation = Boolean(pendingIntent && suppliedDetails);\n\nconst orderNumber = (orderNumMatch ? orderNumMatch[1] : null) || (isContinuation ? pending.pending_order_number : null);\nconst email = (emailMatch ? emailMatch[0].toLowerCase() : null) || (isContinuation ? pending.pending_email : null);\n\nconst looksLikeOrderQuery = Boolean(email && orderNumber) || ORDER_KEYWORDS.some((k) => lower.includes(k));\nconst looksLikeComplaint = COMPLAINT_KEYWORDS.some((k) => lower.includes(k));\n\nlet intent = 'faq';\nif (isContinuation) intent = pendingIntent;\nelse if (looksLikeComplaint) intent = 'complaint';\nelse if (looksLikeOrderQuery) intent = 'order_status';\n\nreturn [{\n  json: {\n    question: isContinuation && pending.pending_question ? pending.pending_question : message,\n    intent,\n    orderNumber,\n    email,\n    isContinuation,\n    sessionId: $('Webhook - Chat').item.json.body?.sessionId || null,\n  },\n}];"
       },
       "id": "06ca62c1-59fc-400a-b2c0-dc8d4e0564bb",
       "name": "Classify Intent",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        240,
-        1584
+        128,
+        1456
       ]
     },
     {
@@ -60,8 +60,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        576,
-        1312
+        384,
+        1552
       ]
     },
     {
@@ -73,8 +73,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        576,
-        1568
+        960,
+        1856
       ]
     },
     {
@@ -175,14 +175,14 @@
     },
     {
       "parameters": {
-        "jsCode": "return [{ json: { answer: $json.message } }];"
+        "jsCode": "return [{ json: { answer: $('Execute Order Lookup').item.json.message } }];"
       },
       "id": "0ac5cc19-4ee7-49f2-8466-0774f145f32a",
       "name": "Format Order Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1456,
+        1744,
         960
       ]
     },
@@ -195,8 +195,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1232,
-        1216
+        1728,
+        1232
       ]
     },
     {
@@ -215,8 +215,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        784,
-        1824
+        400,
+        2032
       ],
       "credentials": {
         "httpHeaderAuth": {
@@ -236,8 +236,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
       "position": [
-        1024,
-        1824
+        592,
+        2032
       ],
       "credentials": {
         "postgres": {
@@ -255,8 +255,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1232,
-        1824
+        768,
+        2032
       ]
     },
     {
@@ -289,8 +289,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        1456,
-        1824
+        928,
+        2032
       ]
     },
     {
@@ -302,8 +302,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1680,
-        1968
+        1424,
+        1840
       ]
     },
     {
@@ -335,8 +335,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1680,
-        1664
+        832,
+        1632
       ],
       "credentials": {
         "anthropicApi": {
@@ -354,8 +354,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1904,
-        1664
+        1024,
+        1632
       ]
     },
     {
@@ -368,8 +368,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        2112,
-        1472
+        2416,
+        1248
       ]
     },
     {
@@ -417,7 +417,7 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -288,
+        -560,
         1312
       ],
       "id": "e830fffa-26f9-4335-9636-9c1af9d76da4",
@@ -436,7 +436,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -496,
+        -768,
         1312
       ],
       "id": "01e6bd8f-58ad-4f46-ab8b-2051568cae73",
@@ -456,6 +456,220 @@
       ],
       "id": "0d9081b7-e690-417a-a483-0e42c94e0b9e",
       "name": "True (over limit)"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO unanswered_questions (question, session_id, reason, similarity_score)\nVALUES ($1, $2, 'below_threshold', $3)\nRETURNING id, created_at",
+        "options": {
+          "queryReplacement": "={{ [$('Webhook - Chat').item.json.body.question, $('Webhook - Chat').item.json.body.sessionId, $('Check Relevance').item.json.topSimilarity] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1680,
+        1840
+      ],
+      "id": "e540b0f3-33a2-497f-b9d2-2a0bc5a1b237",
+      "name": "Log Below-Threshold Miss",
+      "credentials": {
+        "postgres": {
+          "id": "nII9UJDNmVB93OrV",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    answer: $('No Match Response').item.json.answer\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2032,
+        1840
+      ],
+      "id": "c4508355-8c4d-4b64-9f93-78563227a390",
+      "name": "Rebuild No-Match Answer"
+    },
+    {
+      "parameters": {
+        "jsCode": "const answer = $json.answer ?? \"\";\nconst lower = answer.toLowerCase();\n\nconst DECLINE_PHRASES = [\n  \"i'm not sure\",\n  \"i am not sure\",\n  \"outside what i can help\",\n  \"i don't have that information\",\n  \"i do not have that information\",\n  \"i'm not able to find\",\n  \"i am not able to find\",\n  \"i don't have access to\",\n  \"i'm not able to help with that\",\n  \"reach out to our support team\",\n  \"speak with a person\",\n];\n\nconst isLowConfidence = DECLINE_PHRASES.some(p => lower.includes(p));\n\nreturn [{\n  json: {\n    ...$json,\n    isLowConfidence\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1296,
+        1632
+      ],
+      "id": "09bf0431-81bc-406b-ab40-4c5cba84582d",
+      "name": "Detect Low-Confidence Answer"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f5933605-e0cf-478d-b1a3-52023e04df19",
+              "leftValue": "={{ $json.isLowConfidence }}",
+              "rightValue": "=\n",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1536,
+        1632
+      ],
+      "id": "2ded27f3-2a63-42e4-947c-c285f7c6860a",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO unanswered_questions (question, session_id, reason, similarity_score, answer_given)\nVALUES ($1, $2, 'low_confidence_answer', $3, $4)\nRETURNING id, created_at",
+        "options": {
+          "queryReplacement": "={{ [$('Webhook - Chat').item.json.body.question, $('Webhook - Chat').item.json.body.sessionId, $('Check Relevance').item.json.topSimilarity, $('Format Response').item.json.answer] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1776,
+        1552
+      ],
+      "id": "edcab352-baab-486d-bd6b-6ceec6ee97e0",
+      "name": "Log Low-Confidence Answer",
+      "credentials": {
+        "postgres": {
+          "id": "nII9UJDNmVB93OrV",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { answer: $('Format Response').item.json.answer } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1968,
+        1536
+      ],
+      "id": "3d2b3a7e-e893-4a26-803e-9c1ff2ba3119",
+      "name": "Rebuild Answer After Log"
+    },
+    {
+      "parameters": {
+        "sendTo": "dennisphx18@gmail.com",
+        "subject": "Cociniña complaint escalation",
+        "emailType": "text",
+        "message": "=A customer complaint was flagged by Order Pilot.\n\nQuestion: {{ $('Webhook - Chat').item.json.body.question }}\nSession ID: {{ $('Webhook - Chat').item.json.body.sessionId }}\nTime: {{ $now }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        1648
+      ],
+      "id": "6c0897ca-b693-4c1c-80ea-e11ca348be01",
+      "name": "Send Escalation Email",
+      "webhookId": "12e95b79-9fe0-428a-8f38-5b59ba1e4868",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bfjAaJN4jALKzkVO",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  (SELECT pending_intent FROM pending_intents WHERE session_id = $1) AS pending_intent,\n  (SELECT order_number FROM pending_intents WHERE session_id = $1) AS pending_order_number,\n  (SELECT email FROM pending_intents WHERE session_id = $1) AS pending_email,\n  (SELECT original_question FROM pending_intents WHERE session_id = $1) AS pending_question",
+        "options": {
+          "queryReplacement": "={{ [$('Webhook - Chat').item.json.body.sessionId] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -352,
+        1312
+      ],
+      "id": "d156d67d-b6bf-4b53-bc7a-25be5095e54c",
+      "name": "Load Pending Intent",
+      "credentials": {
+        "postgres": {
+          "id": "nII9UJDNmVB93OrV",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO pending_intents (session_id, pending_intent, order_number, email, original_question, updated_at)\nVALUES ($1, $2, $3, $4, $5, now())\nON CONFLICT (session_id) DO UPDATE SET\n  pending_intent    = EXCLUDED.pending_intent,\n  order_number      = COALESCE(EXCLUDED.order_number, pending_intents.order_number),\n  email             = COALESCE(EXCLUDED.email, pending_intents.email),\n  original_question = COALESCE(pending_intents.original_question, EXCLUDED.original_question),\n  updated_at        = now()\nRETURNING session_id",
+        "options": {
+          "queryReplacement": "={{ [$('Classify Intent').item.json.sessionId, $('Classify Intent').item.json.intent, $('Classify Intent').item.json.orderNumber, $('Classify Intent').item.json.email, $('Classify Intent').item.json.question] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1376,
+        1232
+      ],
+      "id": "fc9b747c-65bf-455d-9697-68ad6f9c225b",
+      "name": "Save Pending Intent",
+      "credentials": {
+        "postgres": {
+          "id": "nII9UJDNmVB93OrV",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH deleted AS (\n  DELETE FROM pending_intents WHERE session_id = $1 RETURNING session_id\n)\nSELECT (SELECT count(*) FROM deleted) AS cleared",
+        "options": {
+          "queryReplacement": "={{ [$('Webhook - Chat').item.json.body.sessionId] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1440,
+        960
+      ],
+      "id": "d5e68aff-b2b9-4ed6-9df8-71ee02e4c469",
+      "name": "Clear Pending Intent",
+      "credentials": {
+        "postgres": {
+          "id": "nII9UJDNmVB93OrV",
+          "name": "Postgres account"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -486,7 +700,7 @@
       "main": [
         [
           {
-            "node": "Escalation Stub",
+            "node": "Send Escalation Email",
             "type": "main",
             "index": 0
           }
@@ -540,7 +754,7 @@
         ],
         [
           {
-            "node": "Ask For Order Info",
+            "node": "Save Pending Intent",
             "type": "main",
             "index": 0
           }
@@ -551,7 +765,7 @@
       "main": [
         [
           {
-            "node": "Format Order Response",
+            "node": "Clear Pending Intent",
             "type": "main",
             "index": 0
           }
@@ -635,7 +849,7 @@
       "main": [
         [
           {
-            "node": "Respond to Webhook",
+            "node": "Log Below-Threshold Miss",
             "type": "main",
             "index": 0
           }
@@ -657,7 +871,7 @@
       "main": [
         [
           {
-            "node": "Respond to Webhook",
+            "node": "Detect Low-Confidence Answer",
             "type": "main",
             "index": 0
           }
@@ -686,7 +900,7 @@
       "main": [
         [
           {
-            "node": "Over Limit",
+            "node": "Load Pending Intent",
             "type": "main",
             "index": 0
           }
@@ -703,6 +917,123 @@
           }
         ]
       ]
+    },
+    "Log Below-Threshold Miss": {
+      "main": [
+        [
+          {
+            "node": "Rebuild No-Match Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rebuild No-Match Answer": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect Low-Confidence Answer": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Log Low-Confidence Answer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Low-Confidence Answer": {
+      "main": [
+        [
+          {
+            "node": "Rebuild Answer After Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rebuild Answer After Log": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Escalation Email": {
+      "main": [
+        [
+          {
+            "node": "Escalation Stub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Pending Intent": {
+      "main": [
+        [
+          {
+            "node": "Over Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Pending Intent": {
+      "main": [
+        [
+          {
+            "node": "Ask For Order Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clear Pending Intent": {
+      "main": [
+        [
+          {
+            "node": "Format Order Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -711,7 +1042,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "dfba05ff-493f-4498-aad1-01748e9e89df",
+  "versionId": "65e66daa-03bb-4a21-8c2b-4b6bd091bb5e",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "6c422960399e48c3a4d8bf32dede75ad1eb6346cc178f3c32bf2211887dab507"
