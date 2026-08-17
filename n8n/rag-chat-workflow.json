@@ -20,7 +20,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const message = ($('Webhook - Chat').item.json.body?.question || '').trim();\nconst lower = message.toLowerCase();\n\nconst emailMatch = message.match(/[\\w.+-]+@[\\w-]+\\.[\\w.-]+/);\nconst orderNumMatch = lower.match(/order\\s*#?\\s*(\\d{2,8})/) || message.match(/#(\\d{2,8})\\b/) || (emailMatch ? message.match(/\\b(\\d{2,8})\\b/) : null);\n\nconst ORDER_KEYWORDS = ['order status', 'my order', 'track my', 'where is my', 'delivery status', 'has my order', 'status of my order'];\nconst COMPLAINT_KEYWORDS = ['refund', 'complaint', 'cancel my order', 'terrible', 'awful', 'worst', 'unacceptable', 'never arrived', 'missing item', 'wrong item', 'not happy', 'unhappy', 'disappointed', 'compensation', 'manager', 'escalate', 'cold food', 'arrived cold', 'very late', 'rude', 'poor service', 'bad experience', 'ridiculous', 'angry', 'upset', 'frustrated', 'damaged', 'broken', 'spoiled', 'horrible', 'did not arrive', \"didn't arrive\", \"hasn't arrived\", 'has not arrived', 'have not received', \"haven't received\", 'still waiting', 'not on time', 'late delivery', 'took too long', 'still not here'];\n\n// --- pending state ---\nconst pending = $('Load Pending Intent').item.json;\nconst pendingIntent = pending.pending_intent || null;\nconst suppliedDetails = Boolean(emailMatch || orderNumMatch);\nconst isContinuation = Boolean(pendingIntent && suppliedDetails);\n\nconst orderNumber = (orderNumMatch ? orderNumMatch[1] : null) || (isContinuation ? pending.pending_order_number : null);\nconst email = (emailMatch ? emailMatch[0].toLowerCase() : null) || (isContinuation ? pending.pending_email : null);\n\nconst looksLikeOrderQuery = Boolean(email && orderNumber) || ORDER_KEYWORDS.some((k) => lower.includes(k));\nconst looksLikeComplaint = COMPLAINT_KEYWORDS.some((k) => lower.includes(k));\n\nlet intent = 'faq';\nif (isContinuation) intent = pendingIntent;\nelse if (looksLikeComplaint) intent = 'complaint';\nelse if (looksLikeOrderQuery) intent = 'order_status';\n\nreturn [{\n  json: {\n    question: isContinuation && pending.pending_question ? pending.pending_question : message,\n    intent,\n    orderNumber,\n    email,\n    isContinuation,\n    sessionId: $('Webhook - Chat').item.json.body?.sessionId || null,\n  },\n}];"
+        "jsCode": "const message = ($('Webhook - Chat').item.json.body?.question || '').trim();\nconst lower = message.toLowerCase();\n\nconst emailMatch = message.match(/[\\w.+-]+@[\\w-]+\\.[\\w.-]+/);\nconst orderNumMatch = lower.match(/order\\s*#?\\s*(\\d{2,8})/) || message.match(/#(\\d{2,8})\\b/) || (emailMatch ? message.match(/\\b(\\d{2,8})\\b/) : null);\n\nconst ORDER_KEYWORDS = ['order status', 'my order', 'track my', 'where is my', 'delivery status', 'has my order', 'status of my order'];\nconst COMPLAINT_KEYWORDS = ['refund', 'complaint', 'terrible', 'awful', 'worst', 'unacceptable', 'never arrived', 'missing item', 'wrong item', 'not happy', 'unhappy', 'disappointed', 'compensation', 'manager', 'escalate', 'cold food', 'arrived cold', 'very late', 'rude', 'poor service', 'bad experience', 'ridiculous', 'angry', 'upset', 'frustrated', 'damaged', 'broken', 'spoiled', 'horrible', 'did not arrive', \"didn't arrive\", \"hasn't arrived\", 'has not arrived', 'have not received', \"haven't received\", 'still waiting', 'not on time', 'late delivery', 'took too long', 'still not here','wrong order', 'wrong food', 'not what i ordered', 'incorrect order'];\n\n// --- pending state ---\nconst pending = $('Load Pending Intent').item.json;\nconst pendingIntent = pending.pending_intent || null;\nconst suppliedDetails = Boolean(emailMatch || orderNumMatch);\nconst isContinuation = Boolean(pendingIntent && suppliedDetails);\n\nconst orderNumber = (orderNumMatch ? orderNumMatch[1] : null) || (isContinuation ? pending.pending_order_number : null);\nconst email = (emailMatch ? emailMatch[0].toLowerCase() : null) || (isContinuation ? pending.pending_email : null);\n\nconst isCancelQuestion = lower.includes('cancel');\nconst looksLikeOrderQuery = Boolean(email && orderNumber) || (!isCancelQuestion && ORDER_KEYWORDS.some((k) => lower.includes(k)));\nconst looksLikeComplaint = COMPLAINT_KEYWORDS.some((k) => lower.includes(k));\n\nlet intent = 'faq';\nif (isContinuation) intent = pendingIntent;\nelse if (looksLikeComplaint) intent = 'complaint';\nelse if (looksLikeOrderQuery) intent = 'order_status';\n\nreturn [{\n  json: {\n    question: isContinuation && pending.pending_question ? pending.pending_question : message,\n    intent,\n    orderNumber,\n    email,\n    isContinuation,\n    sessionId: $('Webhook - Chat').item.json.body?.sessionId || null,\n  },\n}];"
       },
       "id": "06ca62c1-59fc-400a-b2c0-dc8d4e0564bb",
       "name": "Classify Intent",
@@ -384,8 +384,8 @@
           "conditions": [
             {
               "id": "47e7fbf3-f034-4415-8a8e-d5096fd9731c",
-              "leftValue": "={{ $json.request_count }}",
-              "rightValue": "={{ $('Compute Rate Limit Key').item.json.limit }}",
+              "leftValue": "={{ $('Upsert Rate Limit').first().json.request_count }}",
+              "rightValue": "=20",
               "operator": {
                 "type": "number",
                 "operation": "gt"
@@ -431,7 +431,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const windowMinutes = 10;\nlet ip = $json.headers['x-real-ip'] ||\n  $json.headers['x-forwarded-for']?.split(',').pop()?.trim() ||\n  'unknown';\n\nif (!/^[0-9a-fA-F:.]{1,45}$/.test(ip)) ip = 'unknown';\n\nconst windowMs = windowMinutes * 60 * 1000;\nconst windowStart = new Date(Math.floor(Date.now() / windowMs) * windowMs).toISOString();\n\nreturn [{ json: { ...$json, rateLimitIp: ip, windowStart, limit: 20 } }];"
+        "jsCode": "const windowMinutes = 10;\nlet ip = $('Webhook - Chat').item.json.headers['x-real-ip'] ||\n  $('Webhook - Chat').item.json.headers['x-forwarded-for']?.split(',').pop()?.trim() ||\n  'unknown';\n\nif (!/^[0-9a-fA-F:.]{1,45}$/.test(ip)) ip = 'unknown';\n\nconst windowMs = windowMinutes * 60 * 1000;\nconst windowStart = new Date(Math.floor(Date.now() / windowMs) * windowMs).toISOString();\n\nreturn [{ json: { ...$json, rateLimitIp: ip, windowStart, limit: 20 } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1042,7 +1042,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "65e66daa-03bb-4a21-8c2b-4b6bd091bb5e",
+  "versionId": "a008de11-fbd4-4cdf-83f3-3b1ea5b4b6a1",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "6c422960399e48c3a4d8bf32dede75ad1eb6346cc178f3c32bf2211887dab507"
