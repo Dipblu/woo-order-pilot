@@ -73,8 +73,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1120,
-        1808
+        1024,
+        1888
       ]
     },
     {
@@ -302,8 +302,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1744,
-        1952
+        1696,
+        2112
       ]
     },
     {
@@ -335,8 +335,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1312,
-        1632
+        1344,
+        1616
       ],
       "credentials": {
         "anthropicApi": {
@@ -355,7 +355,7 @@
       "typeVersion": 2,
       "position": [
         1488,
-        1632
+        1616
       ]
     },
     {
@@ -468,8 +468,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1936,
-        1952
+        1888,
+        2112
       ],
       "id": "e540b0f3-33a2-497f-b9d2-2a0bc5a1b237",
       "name": "Log Below-Threshold Miss",
@@ -487,8 +487,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2128,
-        1952
+        2080,
+        2112
       ],
       "id": "c4508355-8c4d-4b64-9f93-78563227a390",
       "name": "Rebuild No-Match Answer"
@@ -500,8 +500,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1664,
-        1632
+        1616,
+        1616
       ],
       "id": "09bf0431-81bc-406b-ab40-4c5cba84582d",
       "name": "Detect Low-Confidence Answer"
@@ -534,8 +534,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1984,
-        1632
+        1792,
+        1616
       ],
       "id": "2ded27f3-2a63-42e4-947c-c285f7c6860a",
       "name": "If"
@@ -552,7 +552,7 @@
       "typeVersion": 2.6,
       "position": [
         1824,
-        1472
+        1936
       ],
       "id": "edcab352-baab-486d-bd6b-6ceec6ee97e0",
       "name": "Log Low-Confidence Answer",
@@ -570,8 +570,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1984,
-        1472
+        2048,
+        1936
       ],
       "id": "3d2b3a7e-e893-4a26-803e-9c1ff2ba3119",
       "name": "Rebuild Answer After Log"
@@ -589,8 +589,8 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
       "position": [
-        944,
-        1808
+        864,
+        1888
       ],
       "id": "6c0897ca-b693-4c1c-80ea-e11ca348be01",
       "name": "Send Escalation Email",
@@ -807,6 +807,19 @@
       ],
       "id": "181d08f4-2296-43d9-84ed-cbc3716e2ea5",
       "name": "Format Combined Response"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { answer: $('Format Response').item.json.answer } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2176,
+        1632
+      ],
+      "id": "de072014-7b1c-4e13-b855-f8a62f241a0b",
+      "name": "Rebuild Answer (Clean)"
     }
   ],
   "pinData": {},
@@ -1099,7 +1112,7 @@
         ],
         [
           {
-            "node": "Respond to Webhook",
+            "node": "Rebuild Answer (Clean)",
             "type": "main",
             "index": 0
           }
@@ -1244,6 +1257,17 @@
           }
         ]
       ]
+    },
+    "Rebuild Answer (Clean)": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -1252,7 +1276,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "b684c43d-610a-46b3-bba9-22fbbc0d161a",
+  "versionId": "e1fe7544-51a5-4953-af77-06c01cf5736d",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "6c422960399e48c3a4d8bf32dede75ad1eb6346cc178f3c32bf2211887dab507"
