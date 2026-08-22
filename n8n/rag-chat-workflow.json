@@ -27,8 +27,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        208,
-        1616
+        -288,
+        1808
       ]
     },
     {
@@ -60,8 +60,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        624,
-        1808
+        176,
+        2080
       ]
     },
     {
@@ -73,8 +73,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1024,
-        1888
+        1472,
+        1792
       ]
     },
     {
@@ -106,8 +106,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        1136,
-        1184
+        832,
+        1216
       ]
     },
     {
@@ -140,7 +140,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        1312,
+        1280,
         1056
       ]
     },
@@ -207,7 +207,7 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ model: \"text-embedding-3-small\", input: $('Webhook - Chat').item.json.body.question || \"How long will my delivery take?\" }) }}",
+        "jsonBody": "={{ JSON.stringify({ model: \"text-embedding-3-small\", input: $('Classify Intent').item.json.question }) }}",
         "options": {}
       },
       "id": "2c3de703-e4b4-434a-b02c-51cd5e48bf5d",
@@ -215,8 +215,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        800,
-        2128
+        688,
+        2208
       ],
       "credentials": {
         "httpHeaderAuth": {
@@ -236,8 +236,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
       "position": [
-        960,
-        2128
+        896,
+        2208
       ],
       "credentials": {
         "postgres": {
@@ -248,15 +248,15 @@
     },
     {
       "parameters": {
-        "jsCode": "const question = $('Webhook - Chat').first().json.body?.question || \"How long will my delivery take?\";\nconst items = $input.all();\nconst topSimilarity = items.length > 0 ? items[0].json.similarity : 0;\nconst context = items.map(item => item.json.content).join(\"\\n\\n---\\n\\n\");\nconst THRESHOLD = 0.2;\nreturn [{ json: { question, context, topSimilarity, belowThreshold: topSimilarity < THRESHOLD } }];"
+        "jsCode": "const question = $('Classify Intent').first().json.question;\nconst items = $input.all();\nconst topSimilarity = items.length > 0 ? items[0].json.similarity : 0;\nconst context = items.map(item => item.json.content).join(\"\\n\\n---\\n\\n\");\nconst THRESHOLD = 0.2;\nreturn [{ json: { question, context, topSimilarity, belowThreshold: topSimilarity < THRESHOLD } }];"
       },
       "id": "bb49a57d-af7c-4d72-8d55-ec3bba22a2b7",
       "name": "Check Relevance",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1120,
-        2128
+        1040,
+        2208
       ]
     },
     {
@@ -289,8 +289,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        1392,
-        2128
+        1184,
+        2208
       ]
     },
     {
@@ -302,8 +302,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1696,
-        2112
+        1424,
+        2048
       ]
     },
     {
@@ -335,8 +335,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1344,
-        1616
+        1184,
+        2560
       ],
       "credentials": {
         "anthropicApi": {
@@ -354,8 +354,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1488,
-        1616
+        1360,
+        2560
       ]
     },
     {
@@ -468,8 +468,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1888,
-        2112
+        1600,
+        2048
       ],
       "id": "e540b0f3-33a2-497f-b9d2-2a0bc5a1b237",
       "name": "Log Below-Threshold Miss",
@@ -487,8 +487,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2080,
-        2112
+        1744,
+        2048
       ],
       "id": "c4508355-8c4d-4b64-9f93-78563227a390",
       "name": "Rebuild No-Match Answer"
@@ -500,8 +500,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1616,
-        1616
+        1536,
+        2560
       ],
       "id": "09bf0431-81bc-406b-ab40-4c5cba84582d",
       "name": "Detect Low-Confidence Answer"
@@ -534,8 +534,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1792,
-        1616
+        1696,
+        2560
       ],
       "id": "2ded27f3-2a63-42e4-947c-c285f7c6860a",
       "name": "If"
@@ -551,8 +551,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1824,
-        1936
+        1888,
+        2384
       ],
       "id": "edcab352-baab-486d-bd6b-6ceec6ee97e0",
       "name": "Log Low-Confidence Answer",
@@ -570,8 +570,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2048,
-        1936
+        2080,
+        2368
       ],
       "id": "3d2b3a7e-e893-4a26-803e-9c1ff2ba3119",
       "name": "Rebuild Answer After Log"
@@ -589,8 +589,8 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
       "position": [
-        864,
-        1888
+        1312,
+        1792
       ],
       "id": "6c0897ca-b693-4c1c-80ea-e11ca348be01",
       "name": "Send Escalation Email",
@@ -734,8 +734,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        400,
-        1616
+        -48,
+        1808
       ],
       "id": "2cf65cc7-9a8d-4129-8a3b-490c6628edce",
       "name": "Is Complaint With Order?"
@@ -764,8 +764,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
       "position": [
-        624,
-        1392
+        208,
+        1648
       ],
       "notes": "After importing, open this node and re-select 'Order Pilot - Order Lookup' from the workflow dropdown -- the target workflow ID is assigned by n8n on import and can't be hardcoded in this file."
     },
@@ -782,8 +782,8 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
       "position": [
-        1248,
-        1424
+        416,
+        1648
       ],
       "id": "a8947d2b-91a9-481f-ab2b-b70f7f5a475f",
       "name": "Send Escalation Email (Complaint)",
@@ -802,8 +802,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1424,
-        1424
+        640,
+        1648
       ],
       "id": "181d08f4-2296-43d9-84ed-cbc3716e2ea5",
       "name": "Format Combined Response"
@@ -815,8 +815,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2176,
-        1632
+        1920,
+        2640
       ],
       "id": "de072014-7b1c-4e13-b855-f8a62f241a0b",
       "name": "Rebuild Answer (Clean)"
@@ -1276,7 +1276,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "e1fe7544-51a5-4953-af77-06c01cf5736d",
+  "versionId": "ba107ac5-06c0-48e4-b277-eb43d9189395",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "6c422960399e48c3a4d8bf32dede75ad1eb6346cc178f3c32bf2211887dab507"
