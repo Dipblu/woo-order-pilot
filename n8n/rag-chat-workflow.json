@@ -327,7 +327,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ model: \"claude-sonnet-5\", max_tokens: 1024, system: \"You are a customer support assistant for an online food delivery store. Answer the customer's question using ONLY the context below. If the context doesn't contain the answer, say you're not sure and suggest contacting support directly. Be concise and friendly.\\n\\nContext:\\n\" + $json.context, messages: [ { role: \"user\", content: $json.question } ] }) }}",
+        "jsonBody": "={{ JSON.stringify({ model: \"claude-sonnet-5\", max_tokens: 1024, system: `You are a customer support assistant for an online food delivery store. Answer the customer's question using ONLY the context below. If the context doesn't contain the answer, say you're not sure and suggest contacting support directly. Be concise and friendly.\\n\\nDo not claim any dish is popular, a best seller, or a customer favorite unless the context explicitly says so. Present recommendations as suggestions only.\\n\\nRespond in plain text. Do not use markdown formatting of any kind - no asterisks, bold, headers, or bullet characters.\\n\\nContext:\\n` + $json.context, messages: [ { role: \"user\", content: $json.question } ] }) }}",
         "options": {}
       },
       "id": "4938ffa7-504b-4d5b-8c7c-1534d1399f1b",
@@ -1276,7 +1276,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "ba107ac5-06c0-48e4-b277-eb43d9189395",
+  "versionId": "2b6036b3-c367-438e-b3ac-beca5844a159",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "6c422960399e48c3a4d8bf32dede75ad1eb6346cc178f3c32bf2211887dab507"
