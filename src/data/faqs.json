@@ -67,6 +67,7 @@
     {
         "id":  "faq-014",
         "question":  "What do you recommend? What\u0027s your best seller or most popular dish?",
-        "answer":  "A few dishes we\u0027d suggest trying: Special Chicken Adobo, a classic Filipino comfort dish; Crispy Lechon Kawali for something rich and indulgent; Ginataang Hipon if you like seafood in creamy coconut milk; and Sizzling Sisig, always a crowd favorite. Let us know your taste preference â€” spicy, savory, seafood â€” and we can help narrow it down!"
+        "answer":  "A few dishes we\u0027d suggest trying: Special Chicken Adobo, a classic Filipino comfort dish; Crispy Lechon Kawali for something rich and indulgent; Ginataang Hipon if you like seafood in creamy coconut milk; and Sizzling Sisig for something savory and grilled. Let us know your taste preference â€” spicy, savory, seafood â€” and we can help narrow it down!",
+        "note":  "PLACEHOLDER: dishes listed are editorial picks, not sales-ranked. No best-seller data exists yet. Once real order volume accumulates, replace with actual top sellers from WooCommerce Analytics and re-run npm run ingest:faqs. Do not restate these as best sellers. This field is not embedded or shown to customers."
     }
 ]
