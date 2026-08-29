@@ -2,77 +2,91 @@
   "name": "Order Pilot - Order Lookup",
   "nodes": [
     {
-      "id": "webhook-order-lookup",
-      "name": "Webhook - Order Lookup",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
-      "position": [0, 0],
       "parameters": {
         "httpMethod": "POST",
         "path": "order-lookup",
         "responseMode": "responseNode",
         "options": {}
-      }
+      },
+      "id": "60440cd1-a3d4-4a2a-88a7-e20e4076aa89",
+      "name": "Webhook - Order Lookup",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1248,
+        -352
+      ],
+      "webhookId": "4bdcb2af-0699-4c8e-ac5d-0d5e4a68474b"
     },
     {
-      "id": "execute-workflow-trigger",
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "18e9bd03-5bf3-463a-b22b-b7ee4040e251",
       "name": "When Executed by Another Workflow",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
-      "position": [0, 200],
-      "parameters": {}
+      "position": [
+        -1248,
+        -160
+      ]
     },
     {
-      "id": "normalize-input",
+      "parameters": {
+        "jsCode": "const isWebhook = $json.body !== undefined;\nconst input = isWebhook ? $json.body : $json;\n\nreturn [{\n  json: {\n    orderNumber: String(input.orderNumber || '').trim(),\n    email: String(input.email || '').trim().toLowerCase(),\n    viaWebhook: isWebhook,\n  },\n}];"
+      },
+      "id": "11d87762-7ebf-4204-aace-a508420201a2",
       "name": "Normalize Input",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [220, 100],
-      "parameters": {
-        "jsCode": "const isWebhook = $json.body !== undefined;\nconst input = isWebhook ? $json.body : $json;\n\nreturn [{\n  json: {\n    orderNumber: String(input.orderNumber || '').trim(),\n    email: String(input.email || '').trim().toLowerCase(),\n    viaWebhook: isWebhook,\n  },\n}];"
-      }
+      "position": [
+        -1024,
+        -256
+      ]
     },
     {
-      "id": "get-order",
-      "name": "Get Order",
-      "type": "n8n-nodes-base.wooCommerce",
-      "typeVersion": 1,
-      "position": [440, 100],
-      "continueOnFail": true,
       "parameters": {
         "resource": "order",
         "operation": "get",
         "orderId": "={{ $json.orderNumber }}"
       },
+      "id": "5edbe214-f355-4155-96a9-6df866e050e6",
+      "name": "Get Order",
+      "type": "n8n-nodes-base.wooCommerce",
+      "typeVersion": 1,
+      "position": [
+        -800,
+        -256
+      ],
       "credentials": {
         "wooCommerceApi": {
-          "id": "",
+          "id": "bTt0978QE8WivqYk",
           "name": "WooCommerce account 2"
         }
-      }
+      },
+      "continueOnFail": true
     },
     {
-      "id": "verify-build-response",
+      "parameters": {
+        "jsCode": "const input = $('Normalize Input').first().json;\nconst orderResult = $json;\n\nconst GENERIC_FAIL = \"We couldn't verify an order with that order number and email combination. Please double-check both and try again, or contact us at dennisphx18@gmail.com if you need help.\";\n\nif (!input.orderNumber || !input.email || orderResult.error || !orderResult.id) {\n  return [{ json: { success: false, message: GENERIC_FAIL, viaWebhook: input.viaWebhook } }];\n}\n\nconst billingEmail = (orderResult.billing?.email || '').trim().toLowerCase();\nif (billingEmail !== input.email) {\n  return [{ json: { success: false, message: GENERIC_FAIL, viaWebhook: input.viaWebhook } }];\n}\n\nconst items = (orderResult.line_items || []).map((li) => `${li.quantity}x ${li.name}`).join(', ') || 'none listed';\nconst shipping = orderResult.shipping?.address_1 ? orderResult.shipping : orderResult.billing;\n\nconst maskStreet = (s) => String(s || '').replace(/^\\s*[\\w\\-\\/#]*\\d[\\w\\-\\/#]*\\s+/, '••• ');\n\nconst address = [maskStreet(shipping?.address_1), shipping?.city, shipping?.state, shipping?.postcode]\n  .filter(Boolean)\n  .join(', ');\n\nconst message = `Order #${orderResult.number} status: ${orderResult.status}. Items: ${items}. Total: ${orderResult.currency} ${orderResult.total}.` +\n  (address ? ` Delivery address: ${address}.` : '');\n\nreturn [{\n  json: {\n    success: true,\n    message,\n    order: {\n      number: orderResult.number,\n      status: orderResult.status,\n      total: orderResult.total,\n      currency: orderResult.currency,\n      items,\n      address,\n    },\n    viaWebhook: input.viaWebhook,\n  },\n}];"
+      },
+      "id": "a5a65359-695c-4bf9-a5f4-fb47fd9cdbb4",
       "name": "Verify & Build Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [660, 100],
-      "parameters": {
-        "jsCode": "const input = $('Normalize Input').first().json;\nconst orderResult = $json;\n\nconst GENERIC_FAIL = \"We couldn't verify an order with that order number and email combination. Please double-check both and try again, or contact us at dennisphx18@gmail.com if you need help.\";\n\nif (!input.orderNumber || !input.email || orderResult.error || !orderResult.id) {\n  return [{ json: { success: false, message: GENERIC_FAIL, viaWebhook: input.viaWebhook } }];\n}\n\nconst billingEmail = (orderResult.billing?.email || '').trim().toLowerCase();\nif (billingEmail !== input.email) {\n  return [{ json: { success: false, message: GENERIC_FAIL, viaWebhook: input.viaWebhook } }];\n}\n\nconst items = (orderResult.line_items || []).map((li) => `${li.quantity}x ${li.name}`).join(', ') || 'none listed';\nconst shipping = orderResult.shipping?.address_1 ? orderResult.shipping : orderResult.billing;\nconst address = [shipping?.address_1, shipping?.address_2, shipping?.city, shipping?.state, shipping?.postcode]\n  .filter(Boolean)\n  .join(', ');\n\nconst message = `Order #${orderResult.number} status: ${orderResult.status}. Items: ${items}. Total: ${orderResult.currency} ${orderResult.total}.` +\n  (address ? ` Delivery address: ${address}.` : '');\n\nreturn [{\n  json: {\n    success: true,\n    message,\n    order: {\n      number: orderResult.number,\n      status: orderResult.status,\n      total: orderResult.total,\n      currency: orderResult.currency,\n      items,\n      address,\n    },\n    viaWebhook: input.viaWebhook,\n  },\n}];"
-      }
+      "position": [
+        -576,
+        -256
+      ]
     },
     {
-      "id": "respond-check",
-      "name": "Called Via Webhook?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [880, 100],
       "parameters": {
         "conditions": {
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "strict"
+            "typeValidation": "strict",
+            "version": 1
           },
           "combinator": "and",
           "conditions": [
@@ -80,69 +94,139 @@
               "id": "via-webhook",
               "leftValue": "={{ $json.viaWebhook }}",
               "rightValue": true,
-              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
             }
           ]
         },
         "options": {}
-      }
+      },
+      "id": "377aead9-c97f-4e97-93bc-854982414a96",
+      "name": "Called Via Webhook?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -352,
+        -256
+      ]
     },
     {
-      "id": "respond-to-webhook-ol",
-      "name": "Respond to Webhook",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.1,
-      "position": [1100, 0],
       "parameters": {
         "respondWith": "allIncomingItems",
         "options": {}
-      }
+      },
+      "id": "0e3d0181-88f2-4468-8f0d-611ddcef923f",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -128,
+        -352
+      ]
     },
     {
-      "id": "no-op-end",
+      "parameters": {},
+      "id": "6df9318f-0d9e-4619-9d02-2a8c25a0f720",
       "name": "Return to Caller",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [1100, 200],
-      "parameters": {}
+      "position": [
+        -128,
+        -160
+      ]
     }
   ],
+  "pinData": {},
   "connections": {
     "Webhook - Order Lookup": {
       "main": [
-        [{ "node": "Normalize Input", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "When Executed by Another Workflow": {
       "main": [
-        [{ "node": "Normalize Input", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Normalize Input": {
       "main": [
-        [{ "node": "Get Order", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Get Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Get Order": {
       "main": [
-        [{ "node": "Verify & Build Response", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Verify & Build Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Verify & Build Response": {
       "main": [
-        [{ "node": "Called Via Webhook?", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Called Via Webhook?",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Called Via Webhook?": {
       "main": [
-        [{ "node": "Respond to Webhook", "type": "main", "index": 0 }],
-        [{ "node": "Return to Caller", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return to Caller",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
   },
-  "pinData": {}
+  "versionId": "71efd8fa-5ec5-4a9e-bd8c-761b757c4cfb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6c422960399e48c3a4d8bf32dede75ad1eb6346cc178f3c32bf2211887dab507"
+  },
+  "nodeGroups": [],
+  "id": "6fL44bKrTJ62bidQ",
+  "tags": []
 }
