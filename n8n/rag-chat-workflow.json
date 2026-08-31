@@ -60,8 +60,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        176,
-        2080
+        144,
+        2144
       ]
     },
     {
@@ -73,8 +73,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1472,
-        1792
+        1408,
+        1872
       ]
     },
     {
@@ -106,8 +106,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        832,
-        1216
+        512,
+        2400
       ]
     },
     {
@@ -140,8 +140,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        1280,
-        1056
+        832,
+        3312
       ]
     },
     {
@@ -168,8 +168,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
       "position": [
-        1648,
-        944
+        1088,
+        3168
       ],
       "notes": "After importing, open this node and re-select 'Order Pilot - Order Lookup' from the workflow dropdown -- the target workflow ID is assigned by n8n on import and can't be hardcoded in this file."
     },
@@ -182,8 +182,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2144,
-        944
+        1520,
+        3168
       ]
     },
     {
@@ -195,8 +195,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1920,
-        1136
+        1248,
+        3472
       ]
     },
     {
@@ -215,8 +215,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        688,
-        2208
+        720,
+        2304
       ],
       "credentials": {
         "httpHeaderAuth": {
@@ -236,8 +236,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
       "position": [
-        896,
-        2208
+        864,
+        2304
       ],
       "credentials": {
         "postgres": {
@@ -255,8 +255,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1040,
-        2208
+        1024,
+        2304
       ]
     },
     {
@@ -289,8 +289,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        1184,
-        2208
+        1200,
+        2304
       ]
     },
     {
@@ -302,8 +302,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1424,
-        2048
+        1408,
+        2112
       ]
     },
     {
@@ -335,8 +335,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1184,
-        2560
+        896,
+        2688
       ],
       "credentials": {
         "anthropicApi": {
@@ -354,8 +354,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1360,
-        2560
+        1072,
+        2688
       ]
     },
     {
@@ -468,8 +468,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1616,
-        2048
+        1584,
+        2112
       ],
       "id": "e540b0f3-33a2-497f-b9d2-2a0bc5a1b237",
       "name": "Log Below-Threshold Miss",
@@ -487,8 +487,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1792,
-        2048
+        1824,
+        2112
       ],
       "id": "c4508355-8c4d-4b64-9f93-78563227a390",
       "name": "Rebuild No-Match Answer"
@@ -500,8 +500,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1536,
-        2560
+        1248,
+        2688
       ],
       "id": "09bf0431-81bc-406b-ab40-4c5cba84582d",
       "name": "Detect Low-Confidence Answer"
@@ -534,8 +534,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1696,
-        2560
+        1504,
+        2688
       ],
       "id": "2ded27f3-2a63-42e4-947c-c285f7c6860a",
       "name": "If"
@@ -551,8 +551,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1888,
-        2384
+        1696,
+        2528
       ],
       "id": "edcab352-baab-486d-bd6b-6ceec6ee97e0",
       "name": "Log Low-Confidence Answer",
@@ -570,8 +570,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2080,
-        2368
+        1840,
+        2528
       ],
       "id": "3d2b3a7e-e893-4a26-803e-9c1ff2ba3119",
       "name": "Rebuild Answer After Log"
@@ -589,8 +589,8 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
       "position": [
-        1312,
-        1792
+        1232,
+        1872
       ],
       "id": "6c0897ca-b693-4c1c-80ea-e11ca348be01",
       "name": "Send Escalation Email",
@@ -636,8 +636,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1664,
-        1136
+        1088,
+        3472
       ],
       "id": "fc9b747c-65bf-455d-9697-68ad6f9c225b",
       "name": "Save Pending Intent",
@@ -659,8 +659,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1904,
-        944
+        1248,
+        3168
       ],
       "id": "d5e68aff-b2b9-4ed6-9df8-71ee02e4c469",
       "name": "Clear Pending Intent",
@@ -764,8 +764,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
       "position": [
-        208,
-        1648
+        864,
+        1344
       ],
       "notes": "After importing, open this node and re-select 'Order Pilot - Order Lookup' from the workflow dropdown -- the target workflow ID is assigned by n8n on import and can't be hardcoded in this file."
     },
@@ -782,8 +782,8 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
       "position": [
-        416,
-        1648
+        1072,
+        1344
       ],
       "id": "a8947d2b-91a9-481f-ab2b-b70f7f5a475f",
       "name": "Send Escalation Email (Complaint)",
@@ -802,8 +802,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        640,
-        1648
+        1248,
+        1344
       ],
       "id": "181d08f4-2296-43d9-84ed-cbc3716e2ea5",
       "name": "Format Combined Response"
@@ -815,11 +815,117 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1920,
-        2640
+        1760,
+        2880
       ],
       "id": "de072014-7b1c-4e13-b855-f8a62f241a0b",
       "name": "Rebuild Answer (Clean)"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select count(*)::int as recent_count\nfrom escalations\nwhere session_id = $1\n  and suppressed = false\n  and created_at > now() - interval '10 minutes';",
+        "options": {
+          "queryReplacement": "={{ $('Webhook - Chat').item.json.body.sessionId }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        736,
+        1728
+      ],
+      "id": "53457e57-268f-474a-8019-431ad82e3673",
+      "name": "Check Recent Escalation",
+      "credentials": {
+        "postgres": {
+          "id": "nII9UJDNmVB93OrV",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c6c98652-5475-4061-a343-0c572f573590",
+              "leftValue": "={{ $('Check Recent Escalation').item.json.recent_count }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        976,
+        1728
+      ],
+      "id": "2c4bee2c-85b4-4990-9569-61f91bbe4d65",
+      "name": "Already Escalated?"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    answer: \"I've already passed this along to our team — someone will follow up with you by email shortly. Sorry again for the trouble.\",\n    suppressed: true,\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1216,
+        1632
+      ],
+      "id": "d23abc52-edc7-44fa-813c-761716fa5f76",
+      "name": "Escalation Suppressed"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "insert into escalations (session_id, reason, question, suppressed)\nvalues ($1, $2, $3, false)\nreturning 1 as logged;",
+        "options": {
+          "queryReplacement": "={{ $('Webhook - Chat').item.json.body.sessionId }}\n{{ $('Classify Intent').item.json.intent }}\n{{ $('Webhook - Chat').item.json.body.question }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1600,
+        1872
+      ],
+      "id": "27750aa5-f39b-49e4-9f38-4aab972db6be",
+      "name": "Log Escalation",
+      "credentials": {
+        "postgres": {
+          "id": "nII9UJDNmVB93OrV",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { answer: $('Escalation Stub').item.json.answer } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1808,
+        1872
+      ],
+      "id": "22f329e7-ccdf-4226-a7ec-2e21e1a0c4f8",
+      "name": "Rebuild Escalation Answer"
     }
   ],
   "pinData": {},
@@ -850,7 +956,7 @@
       "main": [
         [
           {
-            "node": "Send Escalation Email",
+            "node": "Check Recent Escalation",
             "type": "main",
             "index": 0
           }
@@ -868,7 +974,7 @@
       "main": [
         [
           {
-            "node": "Respond to Webhook",
+            "node": "Log Escalation",
             "type": "main",
             "index": 0
           }
@@ -1268,6 +1374,68 @@
           }
         ]
       ]
+    },
+    "Check Recent Escalation": {
+      "main": [
+        [
+          {
+            "node": "Already Escalated?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Already Escalated?": {
+      "main": [
+        [
+          {
+            "node": "Escalation Suppressed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Escalation Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Escalation Suppressed": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Escalation": {
+      "main": [
+        [
+          {
+            "node": "Rebuild Escalation Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rebuild Escalation Answer": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -1276,7 +1444,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "99688142-d86c-4994-89d0-6e9bd8e0d882",
+  "versionId": "5b6a9730-fb29-4f88-ad5f-612dfb81c159",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "6c422960399e48c3a4d8bf32dede75ad1eb6346cc178f3c32bf2211887dab507"
