@@ -60,8 +60,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        144,
-        2144
+        240,
+        2000
       ]
     },
     {
@@ -73,8 +73,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1440,
-        1872
+        1424,
+        1856
       ]
     },
     {
@@ -140,8 +140,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        832,
-        3312
+        640,
+        2768
       ]
     },
     {
@@ -168,8 +168,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
       "position": [
-        1088,
-        3168
+        1024,
+        2544
       ],
       "notes": "After importing, open this node and re-select 'Order Pilot - Order Lookup' from the workflow dropdown -- the target workflow ID is assigned by n8n on import and can't be hardcoded in this file."
     },
@@ -182,8 +182,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1520,
-        3168
+        1440,
+        2544
       ]
     },
     {
@@ -195,8 +195,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1248,
-        3472
+        1184,
+        3344
       ]
     },
     {
@@ -302,8 +302,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1456,
-        2112
+        1440,
+        2288
       ]
     },
     {
@@ -335,8 +335,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        896,
-        2688
+        944,
+        2992
       ],
       "credentials": {
         "anthropicApi": {
@@ -354,8 +354,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1072,
-        2688
+        1088,
+        2992
       ]
     },
     {
@@ -368,8 +368,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        2992,
-        1312
+        2912,
+        2448
       ]
     },
     {
@@ -468,8 +468,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1680,
-        2112
+        1664,
+        2288
       ],
       "id": "e540b0f3-33a2-497f-b9d2-2a0bc5a1b237",
       "name": "Log Below-Threshold Miss",
@@ -487,8 +487,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1856,
-        2112
+        1888,
+        2288
       ],
       "id": "c4508355-8c4d-4b64-9f93-78563227a390",
       "name": "Rebuild No-Match Answer"
@@ -500,8 +500,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1248,
-        2688
+        1232,
+        2992
       ],
       "id": "09bf0431-81bc-406b-ab40-4c5cba84582d",
       "name": "Detect Low-Confidence Answer"
@@ -535,7 +535,7 @@
       "typeVersion": 2.3,
       "position": [
         1504,
-        2688
+        3120
       ],
       "id": "2ded27f3-2a63-42e4-947c-c285f7c6860a",
       "name": "If"
@@ -551,8 +551,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1696,
-        2528
+        1712,
+        2848
       ],
       "id": "edcab352-baab-486d-bd6b-6ceec6ee97e0",
       "name": "Log Low-Confidence Answer",
@@ -570,8 +570,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1840,
-        2528
+        1888,
+        2848
       ],
       "id": "3d2b3a7e-e893-4a26-803e-9c1ff2ba3119",
       "name": "Rebuild Answer After Log"
@@ -600,7 +600,8 @@
           "id": "bfjAaJN4jALKzkVO",
           "name": "Gmail account"
         }
-      }
+      },
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -636,8 +637,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1088,
-        3472
+        1008,
+        3344
       ],
       "id": "fc9b747c-65bf-455d-9697-68ad6f9c225b",
       "name": "Save Pending Intent",
@@ -659,8 +660,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1248,
-        3168
+        1216,
+        2544
       ],
       "id": "d5e68aff-b2b9-4ed6-9df8-71ee02e4c469",
       "name": "Clear Pending Intent",
@@ -815,8 +816,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1712,
-        2880
+        1728,
+        3328
       ],
       "id": "de072014-7b1c-4e13-b855-f8a62f241a0b",
       "name": "Rebuild Answer (Clean)"
@@ -902,8 +903,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1664,
-        1872
+        1648,
+        1856
       ],
       "id": "27750aa5-f39b-49e4-9f38-4aab972db6be",
       "name": "Log Escalation",
@@ -921,8 +922,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1856,
-        1872
+        1872,
+        1856
       ],
       "id": "22f329e7-ccdf-4226-a7ec-2e21e1a0c4f8",
       "name": "Rebuild Escalation Answer"
@@ -962,6 +963,55 @@
       ],
       "id": "1b7ecc14-2b53-4022-a493-a1f52dfcb41b",
       "name": "Rebuild Suppressed Answer"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    answer: \"I'm sorry you're having trouble. I wasn't able to reach our team automatically just now — please email us directly at dennisphx18@gmail.com and we'll get onto it right away.\",\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        2096
+      ],
+      "id": "3ac7e41f-efc0-4209-8a06-3ecb705f7101",
+      "name": "Escalation Failed Response"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "insert into escalations (session_id, reason, question, suppressed, email_status)\nvalues ($1, $2, $3, false, 'failed')\nreturning 1 as logged;",
+        "options": {
+          "queryReplacement": "={{ $('Webhook - Chat').item.json.body.sessionId }} {{ $('Classify Intent').item.json.intent }} {{ $('Webhook - Chat').item.json.body.question }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1664,
+        2096
+      ],
+      "id": "a6b927ba-4497-4de4-9452-968a36fc3d46",
+      "name": "Log Failed Escalation",
+      "credentials": {
+        "postgres": {
+          "id": "nII9UJDNmVB93OrV",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { answer: $('Escalation Failed Response').item.json.answer } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1872,
+        2096
+      ],
+      "id": "06583023-c3c8-491f-9ab5-423a88d63ca4",
+      "name": "Rebuild Failed Answer"
     }
   ],
   "pinData": {},
@@ -1291,6 +1341,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "Escalation Failed Response",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -1494,6 +1551,39 @@
           }
         ]
       ]
+    },
+    "Escalation Failed Response": {
+      "main": [
+        [
+          {
+            "node": "Log Failed Escalation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Failed Escalation": {
+      "main": [
+        [
+          {
+            "node": "Rebuild Failed Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rebuild Failed Answer": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -1502,7 +1592,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "4627c514-d5a0-4507-8d31-5d3a76f05d39",
+  "versionId": "0c4d8d47-c589-4ead-b809-f3f18174a44a",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "6c422960399e48c3a4d8bf32dede75ad1eb6346cc178f3c32bf2211887dab507"
