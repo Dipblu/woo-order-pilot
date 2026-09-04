@@ -302,7 +302,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1440,
+        1456,
         2288
       ]
     },
@@ -487,7 +487,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1888,
+        1872,
         2288
       ],
       "id": "c4508355-8c4d-4b64-9f93-78563227a390",
@@ -1012,6 +1012,30 @@
       ],
       "id": "06583023-c3c8-491f-9ab5-423a88d63ca4",
       "name": "Rebuild Failed Answer"
+    },
+    {
+      "parameters": {
+        "chatId": "8910263889",
+        "text": "=🚨 Order Pilot: escalation email FAILED\n\nSession: {{ $('Webhook - Chat').item.json.body.sessionId }}\nQuestion: {{ $('Classify Intent').item.json.question }}\nTime: {{ $now.setZone('Asia/Manila').toFormat('yyyy-LL-dd HH:mm') }}\n\nThe customer was told to email us directly. No escalation email was sent.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2096,
+        2208
+      ],
+      "id": "54a78edd-1158-49c8-a980-cd945b57aa62",
+      "name": "Send a text message",
+      "webhookId": "592fc1c6-b713-464f-8715-379901aa9db5",
+      "credentials": {
+        "telegramApi": {
+          "id": "YEQSkeYWGO0VTppE",
+          "name": "Telegram - Cocinina Alerts"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -1578,11 +1602,17 @@
       "main": [
         [
           {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          },
+          {
             "node": "Respond to Webhook",
             "type": "main",
             "index": 0
           }
-        ]
+        ],
+        []
       ]
     }
   },
@@ -1592,7 +1622,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "0c4d8d47-c589-4ead-b809-f3f18174a44a",
+  "versionId": "2d024f78-f1d6-4852-9825-5f783417cc59",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "6c422960399e48c3a4d8bf32dede75ad1eb6346cc178f3c32bf2211887dab507"
