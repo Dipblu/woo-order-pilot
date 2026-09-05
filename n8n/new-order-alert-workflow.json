@@ -1,0 +1,97 @@
+{
+  "name": "Order Pilot - New Order Alert",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "new-order",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -624,
+        -112
+      ],
+      "id": "324b201f-0652-4b5e-a2fd-ba5db4192ee3",
+      "name": "Webhook",
+      "webhookId": "208b83f2-4078-4c4f-a2b3-2fca87e1264d"
+    },
+    {
+      "parameters": {
+        "jsCode": "const order = $('Webhook').item.json.body;\n\nconst num = order.number || order.id || 'unknown';\nconst total = `${order.currency || 'PHP'} ${order.total || '0.00'}`;\nconst status = order.status || 'unknown';\n\nconst b = order.billing || {};\nconst name = `${b.first_name || ''} ${b.last_name || ''}`.trim() || 'No name';\nconst phone = b.phone || 'No phone';\nconst email = b.email || 'No email';\n\nconst s = order.shipping && order.shipping.address_1 ? order.shipping : b;\nconst addressParts = [\n  s.address_1,\n  s.address_2,\n  s.city,\n  s.postcode\n].filter(p => p && String(p).trim() !== '');\nconst address = addressParts.join(', ') || 'No address';\n\nconst items = (order.line_items || [])\n  .map(i => `• ${i.quantity} x ${i.name}`)\n  .join('\\n') || '• (no items listed)';\n\nconst note = order.customer_note ? `\\n\\nNote: ${order.customer_note}` : '';\n\nconst text = [\n  `🛎️ NEW ORDER #${num}`,\n  ``,\n  `${name}`,\n  `${phone}`,\n  `${email}`,\n  ``,\n  items,\n  ``,\n  `Total: ${total}`,\n  `Status: ${status}`,\n  ``,\n  `Deliver to:`,\n  address\n].join('\\n') + note;\n\nreturn [{ json: { text } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -336,
+        -112
+      ],
+      "id": "62d6ffc4-1258-4c88-931f-dfb226bd4d40",
+      "name": "Format Order Alert"
+    },
+    {
+      "parameters": {
+        "chatId": "8910263889",
+        "text": "={{ $('Format Order Alert').item.json.text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -48,
+        -112
+      ],
+      "id": "b2f9ce80-b46f-4704-bbd0-8595f3e130a5",
+      "name": "Send a text message",
+      "webhookId": "70298158-621d-4738-94aa-8c25309382f3",
+      "credentials": {
+        "telegramApi": {
+          "id": "YEQSkeYWGO0VTppE",
+          "name": "Telegram - Cocinina Alerts"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Format Order Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Order Alert": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "c2d9537e-0f66-469c-bce3-e9008de49b94",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6c422960399e48c3a4d8bf32dede75ad1eb6346cc178f3c32bf2211887dab507"
+  },
+  "nodeGroups": [],
+  "id": "Z72uAhXtfFmQQwHI",
+  "tags": []
+}
