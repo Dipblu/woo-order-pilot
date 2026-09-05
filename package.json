@@ -1,22 +1,24 @@
 {
-  "name": "order-pilot",
-  "version": "0.1.0",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "test:connection": "tsx src/scripts/test-connection.ts",
-    "ingest:faqs": "tsx src/scripts/ingest-faqs.ts",
-    "ingest:products": "tsx src/scripts/ingest-products.ts",
-    "test:retrieval": "tsx src/scripts/test-retrieval.ts"
-  },
-  "dependencies": {
-    "dotenv": "^16.4.5",
-    "pg": "^8.12.0"
-  },
-  "devDependencies": {
-    "@types/node": "^20.14.9",
-    "@types/pg": "^8.11.6",
-    "tsx": "^4.16.2",
-    "typescript": "^5.5.3"
-  }
+    "name":  "order-pilot",
+    "version":  "0.1.0",
+    "private":  true,
+    "type":  "module",
+    "scripts":  {
+                    "test:connection":  "tsx src/scripts/test-connection.ts",
+                    "ingest:faqs":  "tsx src/scripts/ingest-faqs.ts",
+                    "ingest:products":  "tsx src/scripts/ingest-products.ts",
+                    "test:retrieval":  "tsx src/scripts/test-retrieval.ts",
+                    "test:intent":  "tsx src/scripts/test-intent.ts",
+                    "test:intent-sync":  "tsx src/scripts/test-intent-sync.ts"
+                },
+    "dependencies":  {
+                         "dotenv":  "^16.4.5",
+                         "pg":  "^8.12.0"
+                     },
+    "devDependencies":  {
+                            "@types/node":  "^20.14.9",
+                            "@types/pg":  "^8.11.6",
+                            "tsx":  "^4.16.2",
+                            "typescript":  "^5.5.3"
+                        }
 }
