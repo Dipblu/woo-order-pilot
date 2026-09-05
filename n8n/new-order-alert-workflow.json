@@ -19,7 +19,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const order = $('Webhook').item.json.body;\n\nconst num = order.number || order.id || 'unknown';\nconst total = `${order.currency || 'PHP'} ${order.total || '0.00'}`;\nconst status = order.status || 'unknown';\n\nconst b = order.billing || {};\nconst name = `${b.first_name || ''} ${b.last_name || ''}`.trim() || 'No name';\nconst phone = b.phone || 'No phone';\nconst email = b.email || 'No email';\n\nconst s = order.shipping && order.shipping.address_1 ? order.shipping : b;\nconst addressParts = [\n  s.address_1,\n  s.address_2,\n  s.city,\n  s.postcode\n].filter(p => p && String(p).trim() !== '');\nconst address = addressParts.join(', ') || 'No address';\n\nconst items = (order.line_items || [])\n  .map(i => `• ${i.quantity} x ${i.name}`)\n  .join('\\n') || '• (no items listed)';\n\nconst note = order.customer_note ? `\\n\\nNote: ${order.customer_note}` : '';\n\nconst text = [\n  `🛎️ NEW ORDER #${num}`,\n  ``,\n  `${name}`,\n  `${phone}`,\n  `${email}`,\n  ``,\n  items,\n  ``,\n  `Total: ${total}`,\n  `Status: ${status}`,\n  ``,\n  `Deliver to:`,\n  address\n].join('\\n') + note;\n\nreturn [{ json: { text } }];"
+        "jsCode": "const order = $('Webhook').item.json.body || {};\n\nif (!order.id && !order.number) {\n  return [];\n}\n\nconst num = order.number || order.id || 'unknown';\nconst total = `${order.currency || 'PHP'} ${order.total || '0.00'}`;\nconst status = order.status || 'unknown';\n\nconst b = order.billing || {};\nconst name = `${b.first_name || ''} ${b.last_name || ''}`.trim() || 'No name';\nconst phone = b.phone || 'No phone';\nconst email = b.email || 'No email';\n\nconst s = order.shipping && order.shipping.address_1 ? order.shipping : b;\nconst addressParts = [\n  s.address_1,\n  s.address_2,\n  s.city,\n  s.postcode\n].filter(p => p && String(p).trim() !== '');\nconst address = addressParts.join(', ') || 'No address';\n\nconst items = (order.line_items || [])\n  .map(i => `• ${i.quantity} x ${i.name}`)\n  .join('\\n') || '• (no items listed)';\n\nconst note = order.customer_note ? `\\n\\nNote: ${order.customer_note}` : '';\n\nconst text = [\n  `🛎️ NEW ORDER #${num}`,\n  ``,\n  `${name}`,\n  `${phone}`,\n  `${email}`,\n  ``,\n  items,\n  ``,\n  `Total: ${total}`,\n  `Status: ${status}`,\n  ``,\n  `Deliver to:`,\n  address\n].join('\\n') + note;\n\nreturn [{ json: { text } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -86,7 +86,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "c2d9537e-0f66-469c-bce3-e9008de49b94",
+  "versionId": "f6176e06-27bc-44d4-8756-31cfd9abaa29",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "6c422960399e48c3a4d8bf32dede75ad1eb6346cc178f3c32bf2211887dab507"
