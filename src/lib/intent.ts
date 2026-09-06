@@ -1,11 +1,11 @@
 // Canonical intent classification logic for Order Pilot.
 //
-// n8n is the source of truth for behaviour. This file mirrors the logic
-// in the "Classify Intent" Code node so it can be tested;
-// `npm run test:intent-sync` fails if the two have drifted.
+// This is the SOURCE OF TRUTH. The n8n "Classify Intent" Code node is
+// generated from it by `npm run gen:intent`, and `npm run test:intent`
+// fails if the two have drifted.
 //
 // Keep this file free of n8n globals ($, $json, item). The n8n-only
-// plumbing lives in the n8n node.
+// plumbing lives in the generator's wrapper, not here.
 
 export const ORDER_KEYWORDS = [
   'order status',
@@ -90,8 +90,30 @@ export function classifyIntent(
   const lower = message.toLowerCase();
 
   const emailMatch = message.match(/[\w.+-]+@[\w-]+\.[\w.-]+/);
+
+  // "order 771" is an order number. "can I order 20 pieces" is a quantity.
+  // Both match /order\s*(\d{2,8})/, so the bare form is rejected when
+  // "order" reads as a verb or the digits are followed by a unit. An
+  // explicit "order #20" is always trusted.
+  const orderWordMatch = lower.match(/order\s*#?\s*(\d{2,8})/);
+  let orderPhraseMatch: RegExpMatchArray | null = null;
+  if (orderWordMatch) {
+    const at = orderWordMatch.index ?? 0;
+    const before = lower.slice(0, at);
+    const after = lower.slice(at + orderWordMatch[0].length);
+    const explicitHash = /order\s*#\s*\d/.test(orderWordMatch[0]);
+    const orderIsVerb = /(?:can|could|may|should|want to|wanna|would like to|like to|to|please)\s+(?:i|we|you)?\s*$/.test(
+      before
+    );
+    const unitFollows =
+      /^\s*(?:of\b|pcs?\b|pieces?\b|orders?\b|servings?\b|pax\b|plates?\b|bowls?\b|packs?\b|boxes\b|sets?\b|kilos?\b|kgs?\b|grams?\b)/.test(
+        after
+      );
+    if (explicitHash || (!orderIsVerb && !unitFollows)) orderPhraseMatch = orderWordMatch;
+  }
+
   const orderNumMatch =
-    lower.match(/order\s*#?\s*(\d{2,8})/) ||
+    orderPhraseMatch ||
     message.match(/#(\d{2,8})\b/) ||
     (emailMatch ? message.match(/\b(\d{2,8})\b/) : null);
 
