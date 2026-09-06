@@ -1,5 +1,10 @@
 # Order Pilot - Project Notes
 
+> **STALE — historical record only.** These notes end at Phase 4 and are not
+> maintained. For current status see `ORDER_PILOT_HANDOFF_PHASE7.md`; for how the
+> systems work see `docs/OPERATIONS.md`, `docs/N8N_NOTES.md` and `docs/TESTING.md`.
+> Kept because it may hold Phase 1-4 setup detail recorded nowhere else.
+
 I'm building an n8n AI support agent for my WooCommerce store (RAG for product/FAQ inquiries,
 live order lookups, email escalation for complaints). Phase 1 of 6 (Knowledge Base Ingestion)
 is now complete — see below. Next up: Phase 2.

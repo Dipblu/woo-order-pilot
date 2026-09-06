@@ -1,5 +1,11 @@
 # Rate Limiting Design — Phase 3
 
+> **PARTLY SUPERSEDED — design record, Phase 3.** The rate limiter now uses a
+> sliding window, not the fixed window described below, and a daily cleanup
+> workflow was added. The *reasoning* here is still current: why the limit is
+> IP-based rather than sessionId-based, and which header to trust. Treat the node
+> specifications as historical. See `docs/N8N_NOTES.md` for the current workflow.
+
 ## Why IP-based, not sessionId-based
 
 The widget's sessionId lives in the visitor's localStorage — trivial to reset (clear
