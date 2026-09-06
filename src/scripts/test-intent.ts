@@ -43,9 +43,25 @@ const TEST_CASES: TestCase[] = [
     expect: { intent: 'faq' },
   },
   {
-    name: 'QUIRK any cancel mention suppresses the keyword branch',
+    name: 'cancellation complaint now escalates (fixed)',
     message: 'my order was cancelled without warning',
-    expect: { intent: 'faq' },
+    expect: { intent: 'complaint' },
+  },
+  { name: 'cancel request: can I cancel', message: 'can I cancel my order', expect: { intent: 'faq' } },
+  { name: 'cancel request: want to cancel', message: 'I want to cancel my order', expect: { intent: 'faq' } },
+  { name: 'cancellation policy question stays faq', message: 'what is your cancellation policy?', expect: { intent: 'faq' } },
+  { name: 'cancel request with an order number stays faq', message: 'cancel order 771', expect: { intent: 'faq', orderNumber: '771' } },
+  { name: 'us spelling: canceled complaint escalates', message: 'my order was canceled and nobody told me', expect: { intent: 'complaint' } },
+  { name: 'blaming the business escalates', message: 'you cancelled my order for no reason', expect: { intent: 'complaint' } },
+  {
+    name: 'customer-initiated cancellation is not a complaint',
+    message: 'I cancelled my order yesterday, when do I get confirmation?',
+    expect: { intent: 'order_status' },
+  },
+  {
+    name: 'cancellation complaint with both details routes to complaint_with_order',
+    message: 'my order was cancelled, order 771, hermosodennis2@gmail.com',
+    expect: { intent: 'complaint_with_order', orderNumber: '771', email: 'hermosodennis2@gmail.com' },
   },
 
   // --- order number extraction ---

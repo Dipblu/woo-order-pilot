@@ -62,6 +62,12 @@ export const COMPLAINT_KEYWORDS = [
   'wrong food',
   'not what i ordered',
   'incorrect order',
+  'was cancelled',
+  'was canceled',
+  'cancelled without',
+  'canceled without',
+  'you cancelled',
+  'you canceled',
 ];
 
 export type Intent = 'faq' | 'order_status' | 'complaint' | 'complaint_with_order';
@@ -130,7 +136,10 @@ export function classifyIntent(
     (isContinuation ? pending.pending_email : null) ||
     null;
 
-  const isCancelQuestion = lower.includes('cancel');
+  // "how can I cancel my order?" is a request and must not hit the
+  // order-lookup keyword branch. "my order was cancelled" is a report about
+  // something that already happened, and should route normally.
+  const isCancelQuestion = lower.includes('cancel') && !/\bcancell?ed\b/.test(lower);
   const looksLikeOrderQuery =
     Boolean(email && orderNumber) ||
     (!isCancelQuestion && ORDER_KEYWORDS.some((k) => lower.includes(k)));
