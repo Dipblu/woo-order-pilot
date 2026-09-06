@@ -150,6 +150,104 @@ const TEST_CASES: TestCase[] = [
     pending: { pending_intent: 'order_status' },
     expect: { question: 'order 771' },
   },
+  // --- item 10: partial replies across turns ---
+  {
+    name: 'partial reply turn 1 — order number only, nothing stored yet',
+    message: 'order 771',
+    pending: { pending_intent: 'order_status' },
+    expect: { intent: 'order_status', isContinuation: true, orderNumber: '771', email: null },
+  },
+  {
+    name: 'partial reply turn 2 — email arrives, order number from pending',
+    message: 'hermosodennis2@gmail.com',
+    pending: { pending_intent: 'order_status', pending_order_number: '771' },
+    expect: { intent: 'order_status', isContinuation: true, orderNumber: '771', email: 'hermosodennis2@gmail.com' },
+  },
+  {
+    name: 'partial reply reversed — email first',
+    message: 'hermosodennis2@gmail.com',
+    pending: { pending_intent: 'order_status' },
+    expect: { intent: 'order_status', isContinuation: true, orderNumber: null, email: 'hermosodennis2@gmail.com' },
+  },
+  {
+    name: 'partial reply reversed — order number second, email from pending',
+    message: 'order 771',
+    pending: { pending_intent: 'order_status', pending_email: 'hermosodennis2@gmail.com' },
+    expect: { intent: 'order_status', isContinuation: true, orderNumber: '771', email: 'hermosodennis2@gmail.com' },
+  },
+
+  // --- item 10: follow-ups that must NOT continue ---
+  {
+    name: 'unrelated follow-up containing digits does not continue',
+    message: 'do you deliver to 1771?',
+    pending: { pending_intent: 'order_status' },
+    expect: { intent: 'faq', isContinuation: false, orderNumber: null },
+  },
+  {
+    name: 'BUG quantity after "order" is read as an order number mid-conversation',
+    message: 'can I order 20 pieces of lumpia?',
+    pending: { pending_intent: 'order_status' },
+    expect: { intent: 'order_status', isContinuation: true, orderNumber: '20' },
+  },
+  {
+    name: 'single-digit quantity is below the 2-digit floor so it is safe',
+    message: 'can I order 3 lumpia?',
+    pending: { pending_intent: 'order_status' },
+    expect: { intent: 'faq', isContinuation: false, orderNumber: null },
+  },
+  {
+    name: 'quantity phrasing is harmless with no pending intent',
+    message: 'can I order 20 pieces of lumpia?',
+    expect: { intent: 'faq', isContinuation: false },
+  },
+
+  // --- item 10: pending intent variants ---
+  {
+    name: 'continuation adopts a pending complaint intent',
+    message: 'order 771 hermosodennis2@gmail.com',
+    pending: { pending_intent: 'complaint' },
+    expect: { intent: 'complaint', isContinuation: true },
+  },
+  {
+    name: 'continuation adopts a pending complaint_with_order intent',
+    message: 'order 771 hermosodennis2@gmail.com',
+    pending: { pending_intent: 'complaint_with_order' },
+    expect: { intent: 'complaint_with_order', isContinuation: true },
+  },
+  {
+    name: 'empty-string pending_intent is treated as none',
+    message: 'order 771',
+    pending: { pending_intent: '' },
+    expect: { intent: 'faq', isContinuation: false, orderNumber: '771' },
+  },
+  {
+    name: 'GAP stale pending intent is indistinguishable from a fresh one',
+    message: 'order 771',
+    pending: { pending_intent: 'order_status', pending_question: 'asked three days ago' },
+    expect: { intent: 'order_status', isContinuation: true, question: 'asked three days ago' },
+  },
+
+  // --- extraction edge cases ---
+  {
+    name: 'first email wins when two are present',
+    message: 'a@b.com or c@d.com',
+    expect: { email: 'a@b.com' },
+  },
+  {
+    name: 'order number with hash plus email',
+    message: '#771 hermosodennis2@gmail.com',
+    expect: { orderNumber: '771', email: 'hermosodennis2@gmail.com', intent: 'order_status' },
+  },
+  {
+    name: 'eight-digit order number still extracted',
+    message: 'order 12345678',
+    expect: { orderNumber: '12345678' },
+  },
+  {
+    name: 'nine-digit number truncated to the first eight',
+    message: 'order 123456789',
+    expect: { orderNumber: '12345678' },
+  },
 ];
 
 function check(actual: Record<string, unknown>, expected: Expect): string[] {
