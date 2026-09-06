@@ -8,9 +8,9 @@ Last updated: 2026-09-06. Items 1–5, 8 DONE. Item 9 first slice DONE. Item 10 
 
 ## 🟡 START HERE: the cancel fix is ready but not applied
 
-Everything committed is clean and verified. `8472fdc` is the last commit; repo and live n8n agree; all suites pass. **Nothing is broken and nothing is half-applied.**
+Everything committed is clean and verified. `8472fdc` is the last code commit and `7525e29` added this document; repo and live n8n agree; all suites pass; the working tree is clean apart from the untracked `_pending\`. **Nothing is broken and nothing is half-applied.**
 
-But a fix for the cancel quirk was designed, locally tested at **65/65**, and never applied. The three files are in `_pending\` in the repo.
+But a fix for the cancel quirk was designed, locally tested at **65/65**, and never applied. `_pending\` in the repo holds the two updated repo files; the n8n node body is embedded in this document (see "The node body" below) — there is no `.js` file in `_pending\`.
 
 ### What the fix does
 
@@ -44,7 +44,7 @@ const isCancelQuestion = lower.includes('cancel') && !/\bcancell?ed\b/.test(lowe
 ### Apply it in this order
 
 1. **Repo first.** Move `_pending\intent.ts` → `src\lib\intent.ts` and `_pending\test-intent.ts` → `src\scripts\test-intent.ts`. Run `npm run test:intent` — expect **65/65**.
-2. **Then n8n.** Open `Classify Intent`, Ctrl+A, Delete, paste `_pending\classify-intent-node.js` (also embedded below as a fallback). **Confirm 57 lines.** Save.
+2. **Then n8n.** Open `Classify Intent`, Ctrl+A, Delete, paste the node body from "The node body" section below. **Confirm 57 lines.** Save.
 3. **Production tests**, each with a fresh sessionId against `https://dmhermoso.cloud/webhook/chat`:
    - `"my order was cancelled without warning"` → escalation confirmation + a real email to `dennisphx18@gmail.com`
    - `"how can I cancel my order?"` → faq-005 cancellation policy, NOT a lookup
@@ -56,9 +56,9 @@ const isCancelQuestion = lower.includes('cancel') && !/\bcancell?ed\b/.test(lowe
 
 **Note:** between steps 1 and 2, `npm run test:intent-sync` will FAIL on `COMPLAINT_KEYWORDS` — that is the drift guard working correctly, because `intent.ts` has the six new keywords and the n8n node does not yet. Do not "fix" it by reverting intent.ts.
 
-### Fallback — the complete node body
+### The node body
 
-If `_pending\classify-intent-node.js` is missing, paste this (57 lines):
+This is the authoritative copy — paste it into `Classify Intent` at step 2 (57 lines):
 
 ```javascript
 const message = ($('Webhook - Chat').item.json.body?.question || '').trim();
@@ -138,7 +138,7 @@ return [{
 | LLM | Anthropic Claude (`claude-sonnet-5`) |
 | Local repo | `C:\Users\My PC\Projects\Woo-Chatbot` |
 | GitHub | Private: github.com/Dipblu/woo-order-pilot |
-| Latest commit | `8472fdc` — repo IN SYNC with live n8n |
+| Latest commit | `7525e29` (this handoff). Last code commit `8472fdc` — repo IN SYNC with live n8n |
 | Telegram bot | `@cocininaalertsbot` ("Cociniña Alerts"), chat ID `8910263889` |
 | Payment methods | Both COD and online gateway |
 
@@ -467,6 +467,7 @@ Only commit once `Select-String` proves the change is in the file. Review `git d
 | `f05e9f1` | item 9 — intent classification regression suite (31 cases + sync guard) |
 | `8ede60f` | item 10 — session-state cases (→ 47 cases) |
 | `8472fdc` | fix — quantity after "order" no longer read as an order number (→ 57 cases) |
+| `7525e29` | docs — this handoff |
 
 ---
 
