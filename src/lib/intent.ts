@@ -12,6 +12,7 @@ export const ORDER_KEYWORDS = [
   'my order',
   'track my',
   'where is my',
+  'where is order',
   'delivery status',
   'has my order',
   'status of my order',

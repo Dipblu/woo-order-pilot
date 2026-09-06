@@ -35,6 +35,12 @@ const TEST_CASES: TestCase[] = [
   { name: 'where is my order', message: 'where is my order?', expect: { intent: 'order_status' } },
   { name: 'track my order', message: 'can you track my delivery', expect: { intent: 'order_status' } },
   { name: 'order status phrase', message: 'order status please', expect: { intent: 'order_status' } },
+  // --- "where is order N" without the possessive (gap fixed 2026-09-06) ---
+  { name: 'where is order N', message: 'where is order 771', expect: { intent: 'order_status', orderNumber: '771' } },
+  { name: 'where is order N with question mark', message: 'where is order 771?', expect: { intent: 'order_status', orderNumber: '771' } },
+  { name: 'where is my order N still works', message: 'where is my order 771?', expect: { intent: 'order_status', orderNumber: '771' } },
+  { name: 'store location is not an order query', message: 'where is your store located?', expect: { intent: 'faq' } },
+  { name: 'where is order N plus cancel intent — exclusion wins', message: 'where is order 771, I want to cancel it', expect: { intent: 'faq' } },
 
   // --- the cancel collision (handoff: prime test case for item 9) ---
   {
@@ -213,11 +219,7 @@ const TEST_CASES: TestCase[] = [
   { name: 'explicit hash is trusted even with a unit after it', message: 'order #20 pieces', expect: { orderNumber: '20' } },
   { name: 'bare "order N" with no cue is still an order number', message: 'order 20', expect: { orderNumber: '20' } },
   { name: 'order number survives alongside a quantity mention', message: 'I ordered 20 pieces and order 771 never arrived', expect: { orderNumber: '771', intent: 'complaint' } },
-  {
-    name: 'GAP "where is order N" extracts the number but routes to faq',
-    message: 'where is order 771',
-    expect: { orderNumber: '771', intent: 'faq' },
-  },
+  
   { name: 'order number kept after "my"', message: 'my order 771 is late', expect: { orderNumber: '771' } },
   {
     name: 'single-digit quantity is below the 2-digit floor so it is safe',
