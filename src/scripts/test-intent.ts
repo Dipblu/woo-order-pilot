@@ -41,7 +41,14 @@ const TEST_CASES: TestCase[] = [
   { name: 'where is my order N still works', message: 'where is my order 771?', expect: { intent: 'order_status', orderNumber: '771' } },
   { name: 'store location is not an order query', message: 'where is your store located?', expect: { intent: 'faq' } },
   { name: 'where is order N plus cancel intent — exclusion wins', message: 'where is order 771, I want to cancel it', expect: { intent: 'faq' } },
-
+  
+  // --- possessive-free order queries (gap fixed 2026-09-08) ---
+  { name: 'track order N', message: 'track order 771', expect: { intent: 'order_status', orderNumber: '771' } },
+  { name: 'track my delivery still works', message: 'can you track my delivery', expect: { intent: 'order_status' } },
+  { name: 'status of order N', message: 'status of order 771', expect: { intent: 'order_status', orderNumber: '771' } },
+  { name: 'whats the status of order N', message: 'whats the status of order 771', expect: { intent: 'order_status', orderNumber: '771' } },
+  { name: 'what is the status of my order still works', message: 'what is the status of my order?', expect: { intent: 'order_status' } },
+  { name: 'has my order shipped still works', message: 'has my order shipped?', expect: { intent: 'order_status' } },
   // --- the cancel collision (handoff: prime test case for item 9) ---
   {
     name: 'QUIRK cancel question stays faq despite my order keyword',

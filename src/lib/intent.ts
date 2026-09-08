@@ -11,12 +11,14 @@ export const ORDER_KEYWORDS = [
   'order status',
   'my order',
   'track my',
+  'track order',
   'where is my',
   'where is order',
-  'delivery status',
   'has my order',
+  'delivery status',
   'status of my order',
-];
+  'status of order',
+  ];
 
 export const COMPLAINT_KEYWORDS = [
   'refund',
