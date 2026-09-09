@@ -142,12 +142,22 @@ export function classifyIntent(
   // "how can I cancel my order?" is a request and must not hit the
   // order-lookup keyword branch. "my order was cancelled" is a report about
   // something that already happened, and should route normally.
-  const isCancelQuestion = lower.includes('cancel') && !/\bcancell?ed\b/.test(lower);
-  const looksLikeOrderQuery =
-    Boolean(email && orderNumber) ||
-    (!isCancelQuestion && ORDER_KEYWORDS.some((k) => lower.includes(k)));
-  const looksLikeComplaint = COMPLAINT_KEYWORDS.some((k) => lower.includes(k));
+    // Contractions are expanded for keyword matching only. `message` and `lower`
+  // are untouched: the order-number regexes depend on their exact offsets, and
+  // the customer's question is passed downstream verbatim. Mangling a genuine
+  // possessive ("my friend's order") is harmless here because the result is only
+  // ever used for .includes() lookups.
+  const normalized = lower
+    .replace(/\bcan't\b/g, 'cannot')
+    .replace(/\bwon't\b/g, 'will not')
+    .replace(/n't\b/g, ' not')
+    .replace(/(\w)'s\b/g, '$1 is');
 
+  const isCancelQuestion = lower.includes('cancel') && !/\bcancell?ed\b/.test(lower);
+
+  const looksLikeOrderQuery = Boolean(email && orderNumber) || (!isCancelQuestion && ORDER_KEYWORDS.some((k) => normalized.includes(k)));
+  const looksLikeComplaint = COMPLAINT_KEYWORDS.some((k) => normalized.includes(k));
+  
   let intent: Intent | string = 'faq';
   if (isContinuation) intent = pendingIntent as string;
   else if (looksLikeComplaint && email && orderNumber) intent = 'complaint_with_order';

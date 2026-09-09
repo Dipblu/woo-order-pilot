@@ -49,6 +49,19 @@ const TEST_CASES: TestCase[] = [
   { name: 'whats the status of order N', message: 'whats the status of order 771', expect: { intent: 'order_status', orderNumber: '771' } },
   { name: 'what is the status of my order still works', message: 'what is the status of my order?', expect: { intent: 'order_status' } },
   { name: 'has my order shipped still works', message: 'has my order shipped?', expect: { intent: 'order_status' } },
+  
+  // --- contraction normalisation (2026-09-08) ---
+  { name: "where's my order", message: "where's my order?", expect: { intent: 'order_status' } },
+  { name: "where's order N", message: "where's order 771", expect: { intent: 'order_status', orderNumber: '771' } },
+  { name: "what's the status of order N", message: "what's the status of order 771", expect: { intent: 'order_status', orderNumber: '771' } },
+  { name: "hasn't arrived normalises to has not arrived", message: "my order hasn't arrived", expect: { intent: 'complaint' } },
+  { name: "didn't arrive normalises", message: "my food didn't arrive", expect: { intent: 'complaint' } },
+  { name: "haven't received normalises", message: "I haven't received my order", expect: { intent: 'complaint' } },
+  { name: "can't is not mangled into ca not", message: "I can't track my order", expect: { intent: 'order_status' } },
+  { name: "won't is not mangled into wo not", message: "the driver won't answer, my order never arrived", expect: { intent: 'complaint' } },
+  { name: 'genuine possessive does not break complaint matching', message: "my friend's order never arrived", expect: { intent: 'complaint' } },
+  { name: 'cancel exclusion still uses unnormalised text', message: "how can I cancel my order?", expect: { intent: 'faq' } },
+  
   // --- the cancel collision (handoff: prime test case for item 9) ---
   {
     name: 'QUIRK cancel question stays faq despite my order keyword',
