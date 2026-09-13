@@ -385,7 +385,7 @@
             {
               "id": "47e7fbf3-f034-4415-8a8e-d5096fd9731c",
               "leftValue": "={{ $('Compute Sliding Window Estimate').first().json.estimatedCount }}",
-              "rightValue": "=20",
+              "rightValue": "={{ $('Compute Sliding Window Estimate').first().json.limit }}",
               "operator": {
                 "type": "number",
                 "operation": "gt"
@@ -670,7 +670,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const currentCount = $('Upsert Rate Limit').first().json.request_count;\nconst previousCount = $('Get Previous Window Count').first().json.previous_count;\n\nconst windowMs = 10 * 60 * 1000;\nconst windowStartMs = new Date($('Compute Rate Limit Key').item.json.windowStart).getTime();\nconst elapsedMs = Date.now() - windowStartMs;\nconst overlapFraction = Math.max(0, (windowMs - elapsedMs) / windowMs);\n\nconst estimatedCount = currentCount + (previousCount * overlapFraction);\n\nreturn [{ json: { estimatedCount } }];"
+        "jsCode": "const currentCount = $('Upsert Rate Limit').first().json.request_count;\nconst previousCount = $('Get Previous Window Count').first().json.previous_count;\n\nconst windowStartMs = new Date($('Compute Rate Limit Key').item.json.windowStart).getTime();\nconst previousWindowStartMs = new Date($('Compute Rate Limit Key').item.json.previousWindowStart).getTime();\nconst windowMs = windowStartMs - previousWindowStartMs;\n\nconst elapsedMs = Date.now() - windowStartMs;\nconst overlapFraction = Math.max(0, (windowMs - elapsedMs) / windowMs);\n\nconst estimatedCount = currentCount + (previousCount * overlapFraction);\n\nreturn [{ json: { estimatedCount, limit: $('Compute Rate Limit Key').item.json.limit } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1711,7 +1711,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "b40da1c8-429d-49c0-b79d-a866b5f90476",
+  "versionId": "7e1a9c64-0d92-4332-a551-edc41712b879",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "6c422960399e48c3a4d8bf32dede75ad1eb6346cc178f3c32bf2211887dab507"
