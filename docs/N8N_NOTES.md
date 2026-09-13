@@ -327,3 +327,42 @@ which is harmless but makes noisy diffs.
 The 9 dishes: Ginataang Hipon, Tofu Sisig, Pork Adobo, Lumpiang Shanghai,
 Special Chicken Adobo, Crispy Lechon Kawali, Sizzling Sisig, Chicken Curry,
 Sweet and Spicy Laing.
+
+## Working notes (added 2026-09-13)
+
+1. **STALE EXPORT.** The n8n editor canvas can render a stale node body that
+   survives a hard refresh, and Download exports that stale version. Detect it
+   by comparing download file sizes — a jsCode change of any substance moves
+   the byte count. Fix by closing the n8n browser tab entirely (not a refresh),
+   reopening, then downloading.
+
+2. The execution view is authoritative for node BODIES, not just run history.
+   When the canvas and production behaviour disagree, the canvas is wrong.
+
+3. Node positions drift on every export. Use
+
+   ```powershell
+   git diff -U0 -- n8n/rag-chat-workflow.json | Select-String "^[-+]"
+   ```
+
+   to tell churn from substance.
+
+4. After editing a keyword array, read the array back. A line count will not
+   catch a deletion that coincides with an addition.
+
+5. Start every terminal session with
+
+   ```powershell
+   cd "C:\Users\My PC\Projects\Woo-Chatbot"
+   ```
+
+   A fresh shell opens at the home directory, where git, npm and Claude Code
+   all fail confusingly.
+
+6. When replacing a node type, search the canvas for ALL instances first. The
+   Gmail-to-SMTP swap involved two nodes, not one, and the second was easy to
+   miss.
+
+7. A byte-size change proves something changed, not that the right thing
+   changed. Confirm with a Select-String for a token that exists only in the
+   new version.
