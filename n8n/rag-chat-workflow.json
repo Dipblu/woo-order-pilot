@@ -13,7 +13,7 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        -960,
+        -1328,
         1312
       ],
       "webhookId": "4535089a-f51b-4c01-873d-6fdfe3755396"
@@ -66,7 +66,7 @@
     },
     {
       "parameters": {
-        "jsCode": "return [{\n  json: {\n    answer: \"I'm sorry you're having trouble. I've flagged this conversation for a team member to follow up by email as soon as possible. If it's urgent, you can also reach us directly at dennisphx18@gmail.com.\",\n  },\n}];"
+        "jsCode": "return [{\n  json: {\n    answer: `I'm sorry you're having trouble. I've flagged this conversation for a team member to follow up by email as soon as possible. If it's urgent, you can also reach us directly at ${$('Config').item.json.contactEmail}.`,\n  },\n}];"
       },
       "id": "f2e38fff-4acb-4470-9124-9a8126178867",
       "name": "Escalation Stub",
@@ -295,7 +295,7 @@
     },
     {
       "parameters": {
-        "jsCode": "return [{ json: { answer: \"I'm not able to find information about that in our knowledge base. For further help, please email dennisphx18@gmail.com or message us on Facebook at https://www.facebook.com/dennis.hermoso1.\" } }];"
+        "jsCode": "return [{ json: { answer: `I'm not able to find information about that in our knowledge base. For further help, please email ${$('Config').item.json.contactEmail} or message us on Facebook at ${$('Config').item.json.contactFacebook}.` } }];"
       },
       "id": "8fbfc2e2-ebcc-4fb2-98b7-e168befa6f5d",
       "name": "No Match Response",
@@ -738,8 +738,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
       "position": [
-        1184,
-        1312
+        1168,
+        1328
       ],
       "notes": "After importing, open this node and re-select 'Order Pilot - Order Lookup' from the workflow dropdown -- the target workflow ID is assigned by n8n on import and can't be hardcoded in this file."
     },
@@ -905,7 +905,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1456,
+        1472,
         1680
       ],
       "id": "1b7ecc14-2b53-4022-a493-a1f52dfcb41b",
@@ -913,7 +913,7 @@
     },
     {
       "parameters": {
-        "jsCode": "return [{\n  json: {\n    answer: \"I'm sorry you're having trouble. I wasn't able to reach our team automatically just now — please email us directly at dennisphx18@gmail.com and we'll get onto it right away.\",\n  },\n}];"
+        "jsCode": "return [{\n  json: {\n    answer: `I'm sorry you're having trouble. I wasn't able to reach our team automatically just now — please email us directly at ${$('Config').item.json.contactEmail} and we'll get onto it right away.`,\n  },\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1013,11 +1013,11 @@
     },
     {
       "parameters": {
-        "fromEmail": "dennisphx18@gmail.com",
-        "toEmail": "dennisphx18@gmail.com",
-        "subject": "Cociniña complaint escalation",
+        "fromEmail": "={{ $('Config').item.json.fromEmail }}",
+        "toEmail": "={{ $('Config').item.json.escalationEmail }}",
+        "subject": "={{ $('Config').item.json.businessName }} complaint escalation",
         "emailFormat": "text",
-        "text": "=A customer complaint was flagged by Order Pilot.\n\nQuestion: {{ $('Webhook - Chat').item.json.body.question }}\nSession ID: {{ $('Webhook - Chat').item.json.body.sessionId }}\nTime: {{ $now.setZone('Asia/Manila').toFormat('yyyy-LL-dd HH:mm') }}",
+        "text": "=A customer complaint was flagged by Order Pilot.\n\nQuestion: {{ $('Webhook - Chat').item.json.body.question }}\nSession ID: {{ $('Webhook - Chat').item.json.body.sessionId }}\nTime: {{ $now.setZone($('Config').item.json.timezone).toFormat('yyyy-LL-dd HH:mm') }}",
         "options": {}
       },
       "type": "n8n-nodes-base.emailSend",
@@ -1066,11 +1066,11 @@
     },
     {
       "parameters": {
-        "fromEmail": "dennisphx18@gmail.com",
-        "toEmail": "dennisphx18@gmail.com",
-        "subject": "Cociniña complaint escalation",
+        "fromEmail": "{{ $('Config').item.json.fromEmail }}",
+        "toEmail": "{{ $('Config').item.json.escalationEmail }}",
+        "subject": "{{ $('Config').item.json.businessName }} complaint escalation",
         "emailFormat": "text",
-        "text": "=A customer complaint was flagged by Order Pilot.\n\nQuestion: {{ $('Webhook - Chat').item.json.body.question }}\nSession ID: {{ $('Webhook - Chat').item.json.body.sessionId }}\nTime: {{ $now.setZone('Asia/Manila').toFormat('yyyy-LL-dd HH:mm') }}",
+        "text": "=A customer complaint was flagged by Order Pilot.\n\nQuestion: {{ $('Webhook - Chat').item.json.body.question }}\nSession ID: {{ $('Webhook - Chat').item.json.body.sessionId }}\nTime: {{ $now.setZone($('Config').item.json.timezone).toFormat('yyyy-LL-dd HH:mm') }}",
         "options": {}
       },
       "type": "n8n-nodes-base.emailSend",
@@ -1089,6 +1089,60 @@
         }
       },
       "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8a5e8d5c-8244-4feb-a268-ae8da9c324c7",
+              "name": "escalationEmail",
+              "value": "dennisphx18@gmail.com",
+              "type": "string"
+            },
+            {
+              "id": "ff4e407d-72bb-4d18-b9e7-a1ccd8452963",
+              "name": "fromEmail",
+              "value": "dennisphx18@gmail.com",
+              "type": "string"
+            },
+            {
+              "id": "9dee7aac-77f3-41de-8d60-c62f7a4f60ea",
+              "name": "contactEmail",
+              "value": "dennisphx18@gmail.com",
+              "type": "string"
+            },
+            {
+              "id": "90edffde-fd93-488f-90fb-8177f238e7f1",
+              "name": "contactFacebook",
+              "value": "https://www.facebook.com/dennis.hermoso1",
+              "type": "string"
+            },
+            {
+              "id": "34c7b00b-c7de-423b-a4e0-17c6c11102a2",
+              "name": "businessName",
+              "value": "Cociniña",
+              "type": "string"
+            },
+            {
+              "id": "72fe535e-4d31-4e1e-bc73-6cd772a14a2c",
+              "name": "timezone",
+              "value": "Asia/Manila",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1072,
+        1312
+      ],
+      "id": "e45eb818-6ec5-4e62-8e81-77bf5ef06400",
+      "name": "Config"
     }
   ],
   "pinData": {},
@@ -1097,7 +1151,7 @@
       "main": [
         [
           {
-            "node": "Compute Rate Limit Key",
+            "node": "Config",
             "type": "main",
             "index": 0
           }
@@ -1703,6 +1757,17 @@
           }
         ]
       ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Compute Rate Limit Key",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -1711,7 +1776,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "7e1a9c64-0d92-4332-a551-edc41712b879",
+  "versionId": "35bd68c9-cf55-4063-bf46-b3591bfd1781",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "6c422960399e48c3a4d8bf32dede75ad1eb6346cc178f3c32bf2211887dab507"
