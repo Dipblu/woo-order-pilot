@@ -368,8 +368,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        2912,
-        2448
+        2608,
+        2272
       ]
     },
     {
@@ -971,8 +971,8 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        2768,
-        1760
+        2944,
+        2240
       ],
       "id": "54a78edd-1158-49c8-a980-cd945b57aa62",
       "name": "Send a text message",
@@ -982,34 +982,8 @@
           "id": "YEQSkeYWGO0VTppE",
           "name": "Telegram - Cocinina Alerts"
         }
-      }
-    },
-    {
-      "parameters": {
-        "sendTo": "dennisphx18@gmail.com",
-        "subject": "Cociniña complaint escalation",
-        "emailType": "text",
-        "message": "=A customer complaint was flagged by Order Pilot.\n\nQuestion: {{ $('Webhook - Chat').item.json.body.question }}\nSession ID: {{ $('Webhook - Chat').item.json.body.sessionId }}\nTime: {{ $now }}",
-        "options": {
-          "appendAttribution": false
-        }
       },
-      "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2.2,
-      "position": [
-        1216,
-        1904
-      ],
-      "id": "6c0897ca-b693-4c1c-80ea-e11ca348be01",
-      "name": "Send Escalation Email (Gmail - OLD)",
-      "webhookId": "12e95b79-9fe0-428a-8f38-5b59ba1e4868",
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "bfjAaJN4jALKzkVO",
-          "name": "Gmail account"
-        }
-      },
-      "onError": "continueErrorOutput"
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -1037,32 +1011,6 @@
         }
       },
       "onError": "continueErrorOutput"
-    },
-    {
-      "parameters": {
-        "sendTo": "dennisphx18@gmail.com",
-        "subject": "Cociniña complaint escalation",
-        "emailType": "text",
-        "message": "=A customer complaint was flagged by Order Pilot.\n\nQuestion: {{ $('Webhook - Chat').item.json.body.question }}\nSession ID: {{ $('Webhook - Chat').item.json.body.sessionId }}\nTime: {{ $now }}",
-        "options": {
-          "appendAttribution": false
-        }
-      },
-      "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2.2,
-      "position": [
-        1168,
-        1088
-      ],
-      "id": "a8947d2b-91a9-481f-ab2b-b70f7f5a475f",
-      "name": "Send Escalation Email (Complaint) (Gmail - OLD)",
-      "webhookId": "12e95b79-9fe0-428a-8f38-5b59ba1e4868",
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "bfjAaJN4jALKzkVO",
-          "name": "Gmail account"
-        }
-      }
     },
     {
       "parameters": {
@@ -1693,24 +1641,6 @@
         []
       ]
     },
-    "Send Escalation Email (Gmail - OLD)": {
-      "main": [
-        [
-          {
-            "node": "Escalation Stub",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Escalation Failed Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Send Escalation Email": {
       "main": [
         [
@@ -1723,17 +1653,6 @@
         [
           {
             "node": "Escalation Failed Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Send Escalation Email (Complaint) (Gmail - OLD)": {
-      "main": [
-        [
-          {
-            "node": "Format Combined Response",
             "type": "main",
             "index": 0
           }
@@ -1776,7 +1695,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "35bd68c9-cf55-4063-bf46-b3591bfd1781",
+  "versionId": "b011537d-54fc-44b3-9f4a-6f098050e6a3",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "6c422960399e48c3a4d8bf32dede75ad1eb6346cc178f3c32bf2211887dab507"
