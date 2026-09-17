@@ -1014,7 +1014,7 @@
     },
     {
       "parameters": {
-        "fromEmail": "{{ $('Config').first().json.fromEmail }}",
+        "fromEmail": "={{ $('Config').item.json.fromEmail }}",
         "toEmail": "={{ $('Config').item.json.escalationEmail }}",
         "subject": "={{ $('Config').item.json.businessName }} complaint escalation",
         "emailFormat": "text",
@@ -1695,7 +1695,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "ea734f8a-d559-4ded-872d-dfb99cf7a8cb",
+  "versionId": "b605e0dd-8795-4548-b1e6-2924c6e902a1",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "6c422960399e48c3a4d8bf32dede75ad1eb6346cc178f3c32bf2211887dab507"
