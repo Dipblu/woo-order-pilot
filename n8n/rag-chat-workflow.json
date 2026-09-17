@@ -1014,11 +1014,11 @@
     },
     {
       "parameters": {
-        "fromEmail": "{{ $('Config').item.json.fromEmail }}",
-        "toEmail": "{{ $('Config').item.json.escalationEmail }}",
-        "subject": "{{ $('Config').item.json.businessName }} complaint escalation",
+        "fromEmail": "{{ $('Config').first().json.fromEmail }}",
+        "toEmail": "={{ $('Config').item.json.escalationEmail }}",
+        "subject": "={{ $('Config').item.json.businessName }} complaint escalation",
         "emailFormat": "text",
-        "text": "=A customer complaint was flagged by Order Pilot.\n\nQuestion: {{ $('Webhook - Chat').item.json.body.question }}\nSession ID: {{ $('Webhook - Chat').item.json.body.sessionId }}\nTime: {{ $now.setZone($('Config').item.json.timezone).toFormat('yyyy-LL-dd HH:mm') }}",
+        "text": "=A customer complaint was flagged by Order Pilot.\n\nOrder: {{ $('Classify Intent').item.json.orderNumber || 'not provided' }}\nCustomer email: {{ $('Classify Intent').item.json.email || 'not provided' }}\n\nQuestion: {{ $('Classify Intent').item.json.question }}\nSession ID: {{ $('Webhook - Chat').item.json.body.sessionId }}\nTime: {{ $now.setZone($('Config').item.json.timezone).toFormat('yyyy-LL-dd HH:mm') }}",
         "options": {}
       },
       "type": "n8n-nodes-base.emailSend",
@@ -1695,7 +1695,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "b011537d-54fc-44b3-9f4a-6f098050e6a3",
+  "versionId": "ea734f8a-d559-4ded-872d-dfb99cf7a8cb",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "6c422960399e48c3a4d8bf32dede75ad1eb6346cc178f3c32bf2211887dab507"
