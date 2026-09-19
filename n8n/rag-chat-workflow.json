@@ -182,7 +182,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1440,
+        1424,
         2544
       ]
     },
@@ -354,7 +354,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1088,
+        1120,
         2992
       ]
     },
@@ -500,45 +500,11 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1232,
+        1296,
         2992
       ],
       "id": "09bf0431-81bc-406b-ab40-4c5cba84582d",
       "name": "Detect Low-Confidence Answer"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "f5933605-e0cf-478d-b1a3-52023e04df19",
-              "leftValue": "={{ $json.isLowConfidence }}",
-              "rightValue": "=\n",
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        1504,
-        3120
-      ],
-      "id": "2ded27f3-2a63-42e4-947c-c285f7c6860a",
-      "name": "If"
     },
     {
       "parameters": {
@@ -1091,6 +1057,49 @@
       ],
       "id": "e45eb818-6ec5-4e62-8e81-77bf5ef06400",
       "name": "Config"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f5933605-e0cf-478d-b1a3-52023e04df19",
+              "leftValue": "={{ $json.isLowConfidence }}",
+              "rightValue": "=\n",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "11980f0e-e6ad-4718-a883-d5a92756b79b",
+              "leftValue": "={{ $('Check Relevance').first().json.topSimilarity }}",
+              "rightValue": 0.5,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1504,
+        3120
+      ],
+      "id": "2ded27f3-2a63-42e4-947c-c285f7c6860a",
+      "name": "Should Log Low Confidence?"
     }
   ],
   "pinData": {},
@@ -1365,25 +1374,7 @@
       "main": [
         [
           {
-            "node": "If",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "If": {
-      "main": [
-        [
-          {
-            "node": "Log Low-Confidence Answer",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Rebuild Answer (Clean)",
+            "node": "Should Log Low Confidence?",
             "type": "main",
             "index": 0
           }
@@ -1687,6 +1678,24 @@
           }
         ]
       ]
+    },
+    "Should Log Low Confidence?": {
+      "main": [
+        [
+          {
+            "node": "Log Low-Confidence Answer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Rebuild Answer (Clean)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -1695,7 +1704,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "b605e0dd-8795-4548-b1e6-2924c6e902a1",
+  "versionId": "ea4f3b3c-9176-492b-8b82-6a85d81a8d42",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "6c422960399e48c3a4d8bf32dede75ad1eb6346cc178f3c32bf2211887dab507"
