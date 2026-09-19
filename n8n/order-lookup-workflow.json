@@ -55,7 +55,7 @@
       "type": "n8n-nodes-base.wooCommerce",
       "typeVersion": 1,
       "position": [
-        -800,
+        -640,
         -256
       ],
       "credentials": {
@@ -68,14 +68,14 @@
     },
     {
       "parameters": {
-        "jsCode": "const input = $('Normalize Input').first().json;\nconst orderResult = $json;\n\nconst GENERIC_FAIL = \"We couldn't verify an order with that order number and email combination. Please double-check both and try again, or contact us at dennisphx18@gmail.com if you need help.\";\n\nif (!input.orderNumber || !input.email || orderResult.error || !orderResult.id) {\n  return [{ json: { success: false, message: GENERIC_FAIL, viaWebhook: input.viaWebhook } }];\n}\n\nconst billingEmail = (orderResult.billing?.email || '').trim().toLowerCase();\nif (billingEmail !== input.email) {\n  return [{ json: { success: false, message: GENERIC_FAIL, viaWebhook: input.viaWebhook } }];\n}\n\nconst items = (orderResult.line_items || []).map((li) => `${li.quantity}x ${li.name}`).join(', ') || 'none listed';\nconst shipping = orderResult.shipping?.address_1 ? orderResult.shipping : orderResult.billing;\n\nconst maskStreet = (s) => String(s || '').replace(/^\\s*[\\w\\-\\/#]*\\d[\\w\\-\\/#]*\\s+/, '••• ');\n\nconst address = [maskStreet(shipping?.address_1), shipping?.city, shipping?.state, shipping?.postcode]\n  .filter(Boolean)\n  .join(', ');\n\nconst message = `Order #${orderResult.number} status: ${orderResult.status}. Items: ${items}. Total: ${orderResult.currency} ${orderResult.total}.` +\n  (address ? ` Delivery address: ${address}.` : '');\n\nreturn [{\n  json: {\n    success: true,\n    message,\n    order: {\n      number: orderResult.number,\n      status: orderResult.status,\n      total: orderResult.total,\n      currency: orderResult.currency,\n      items,\n      address,\n    },\n    viaWebhook: input.viaWebhook,\n  },\n}];"
+        "jsCode": "const input = $('Normalize Input').first().json;\nconst orderResult = $json;\nconst cfg = $('Config').first().json;\n\nconst GENERIC_FAIL = `We couldn't verify an order with that order number and email combination. Please double-check both and try again, or contact us at ${cfg.contactEmail} if you need help.`;\n\nif (!input.orderNumber || !input.email || orderResult.error || !orderResult.id) {\n  return [{ json: { success: false, message: GENERIC_FAIL, viaWebhook: input.viaWebhook } }];\n}\n\nconst billingEmail = (orderResult.billing?.email || '').trim().toLowerCase();\nif (billingEmail !== input.email) {\n  return [{ json: { success: false, message: GENERIC_FAIL, viaWebhook: input.viaWebhook } }];\n}\n\nconst items = (orderResult.line_items || []).map((li) => `${li.quantity}x ${li.name}`).join(', ') || 'none listed';\nconst shipping = orderResult.shipping?.address_1 ? orderResult.shipping : orderResult.billing;\n\nconst maskStreet = (s) => String(s || '').replace(/^\\s*[\\w\\-\\/#]*\\d[\\w\\-\\/#]*\\s+/, '••• ');\n\nconst address = [maskStreet(shipping?.address_1), shipping?.city, shipping?.state, shipping?.postcode]\n  .filter(Boolean)\n  .join(', ');\n\nconst message = `Order #${orderResult.number} status: ${orderResult.status}. Items: ${items}. Total: ${orderResult.currency} ${orderResult.total}.` +\n  (address ? ` Delivery address: ${address}.` : '');\n\nreturn [{\n  json: {\n    success: true,\n    message,\n    order: {\n      number: orderResult.number,\n      status: orderResult.status,\n      total: orderResult.total,\n      currency: orderResult.currency,\n      items,\n      address,\n    },\n    viaWebhook: input.viaWebhook,\n  },\n}];"
       },
       "id": "a5a65359-695c-4bf9-a5f4-fb47fd9cdbb4",
       "name": "Verify & Build Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -576,
+        -448,
         -256
       ]
     },
@@ -109,7 +109,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -352,
+        -240,
         -256
       ]
     },
@@ -123,8 +123,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        -128,
-        -352
+        -32,
+        -400
       ]
     },
     {
@@ -134,9 +134,63 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        -128,
-        -160
+        0,
+        -144
       ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "93189bdf-446a-464c-93dc-38b2610570bc",
+              "name": "escalationEmail",
+              "value": "dennisphx18@gmail.com",
+              "type": "string"
+            },
+            {
+              "id": "50a4374d-822f-45f4-a4a3-11c46d28ac7f",
+              "name": "fromEmail",
+              "value": "dennisphx18@gmail.com",
+              "type": "string"
+            },
+            {
+              "id": "a1659224-798a-4607-aaff-0f621a7c67dd",
+              "name": "contactEmail",
+              "value": "dennisphx18@gmail.com",
+              "type": "string"
+            },
+            {
+              "id": "ed37cb15-9c04-498a-8bf3-4e0c97d363ef",
+              "name": "contactFacebook",
+              "value": "https://www.facebook.com/dennis.hermoso1",
+              "type": "string"
+            },
+            {
+              "id": "0a0dabc4-7365-48c8-a9d4-b50594479489",
+              "name": "businessName",
+              "value": "Cociniña",
+              "type": "string"
+            },
+            {
+              "id": "a090ca74-2114-4615-9dd7-fbd528ba05bb",
+              "name": "timezone",
+              "value": "Asia/Manila",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -832,
+        -256
+      ],
+      "id": "e8ff7a96-993e-42f9-a6ca-a27af984dfed",
+      "name": "Config"
     }
   ],
   "pinData": {},
@@ -167,7 +221,7 @@
       "main": [
         [
           {
-            "node": "Get Order",
+            "node": "Config",
             "type": "main",
             "index": 0
           }
@@ -213,6 +267,17 @@
           }
         ]
       ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Get Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -221,7 +286,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "71efd8fa-5ec5-4a9e-bd8c-761b757c4cfb",
+  "versionId": "86e9faf9-1936-4285-aa96-bf358e2b3ef8",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "6c422960399e48c3a4d8bf32dede75ad1eb6346cc178f3c32bf2211887dab507"
