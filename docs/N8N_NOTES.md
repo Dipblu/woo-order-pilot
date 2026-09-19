@@ -80,6 +80,11 @@ JSON"**.
 - **`Similarity Search`'s apparently-missing `=` is a CONFIRMED FALSE POSITIVE.**
   Do not "fix" it.
 
+This rule is about what you **type into the UI** — n8n adds the `=` itself when
+it stores the field. The 2026-09-19 working note below covers the separate
+question of whether that `=` actually made it into the stored JSON. The two are
+not in conflict.
+
 ---
 
 ## ⚠️ CODE NODE EDITING RULE
@@ -366,3 +371,43 @@ Sweet and Spicy Laing.
 7. A byte-size change proves something changed, not that the right thing
    changed. Confirm with a Select-String for a token that exists only in the
    new version.
+
+---
+
+## Working notes (added 2026-09-19)
+
+**An expression field only works if its stored value starts with `=`.**
+The `fx` toggle showing as active in the UI does NOT guarantee the prefix was
+stored — editing an existing expression field can drop it. Without it, n8n
+treats the field as a literal string and `{{ ... }}` never evaluates. There is
+no visual difference in the editor; the expression preview pane looks normal
+and the field just silently holds its own source text.
+
+The only reliable check is the exported JSON:
+
+    node -e "const wf=require('./n8n/rag-chat-workflow.json');for(const n of wf.nodes){for(const [k,v] of Object.entries(n.parameters||{})){if(typeof v==='string'&&v.includes('{{')&&!v.startsWith('=')){console.log('MISSING =',n.name,'|',k,'|',v)}}}"
+
+Similarity Search is a known false positive for this scan — see the `=`
+PREFIX RULE section. Do not "fix" it.
+
+This cost five round-trips and three wrong diagnoses on 2026-09-19 — paired-item
+tracking, node reachability across a sub-workflow boundary, and credential
+failure were all investigated before the actual cause was found in the JSON.
+Read the stored value early, not late.
+
+**Canvas position is load-bearing under `executionOrder: v1`.**
+When one node's output fans out to several nodes, run order is decided by
+canvas x-coordinate (ties broken by y), not by connection order. A node placed
+left of `Respond to Webhook` runs before the customer's reply is sent. Combined
+with a default `onError` of Stop Workflow, an alert or logging node in that
+position can abort the run and leave the request hanging with no response.
+
+Consequence: moving nodes around to tidy the canvas can silently change
+behaviour. Any node that is not on the critical path — alerts, side-effect
+logging — belongs to the right of the response node AND should have
+`onError: continueRegularOutput`.
+
+**Both workflows drift independently.** `order-lookup-workflow.json` sat three
+weeks stale in the repo while the main workflow was current, and nothing caught
+it: `test:intent-sync` only covers `intent.ts`. Export both before trusting
+either.
