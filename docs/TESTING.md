@@ -248,3 +248,29 @@ npm run ingest:products    # after editing WooCommerce products
 ```
 
 **Editing WooCommerce products changes nothing until ingest is re-run.**
+
+### Similarity thresholds are tuned by eye, and no suite covers them
+
+Two magic numbers gate answer quality, and both are specific to
+`text-embedding-3-small` plus this corpus:
+
+| Value | Where | What it does |
+|---|---|---|
+| `0.2` | `Check Relevance` | below this, no answer is attempted at all |
+| `0.5` | `Should Log Low Confidence?` | below this, a given answer is logged as low confidence |
+
+The 0.5 floor was added 2026-09-19 and **tuned by eye against 13 rows.**
+Observed genuine declines fell at 0.41-0.47; answers that were actually
+good fell at 0.52+. The gap is narrow and the sample is small. Revisit
+once more rows accumulate.
+
+Before that change, `DECLINE_PHRASES` alone decided the logging, so any
+answer containing a hedge was logged - roughly a third of
+`low_confidence_answer` rows were answers that had worked. The AND
+condition on similarity is what fixed it.
+
+**Neither number is covered by any suite.** `test:retrieval` asserts that
+the right document ranks in the top 3; it says nothing about where the
+score lands relative to either threshold. A model swap or a corpus change
+moves both bands and no test will fail. Re-tune by hand against fresh
+rows.

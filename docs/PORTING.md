@@ -70,6 +70,25 @@ swap suffices.
 Also needing rewrites: complaint keywords, quantity-unit regex, decline
 phrases used by `Detect Low-Confidence Answer`.
 
+**Similarity thresholds** - the same problem as decline phrases, one layer
+down. `0.2` in `Check Relevance` and `0.5` in `Should Log Low Confidence?`
+were both tuned by eye against `text-embedding-3-small` and this corpus.
+A different embedding model or a different knowledge base moves the bands
+and nothing fails loudly: retrieval keeps working, it just starts answering
+questions it should decline or declining ones it could answer. Budget an
+afternoon of watching `unanswered_questions` on a new deployment before
+trusting either number. Details and observed ranges in `TESTING.md`.
+
+**Telegram parse mode** (weekly digest) - the n8n Telegram node defaults to
+Markdown when Parse Mode is unset, and the dropdown offers no "None". Customer
+question text goes into that message verbatim, so an underscore in
+`low_confidence_answer` was enough to make Telegram reject the whole send
+with `can't parse entities`. Current setting is HTML, paired with
+`&`/`<`/`>` escaping inside the digest SQL. **The parse mode and the
+escaping are one decision, not two** - swapping the digest to Slack or email
+means undoing both, and swapping to MarkdownV2 means escaping about eighteen
+characters instead of three.
+
 ---
 
 ## The config layer

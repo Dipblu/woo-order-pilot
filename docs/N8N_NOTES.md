@@ -274,6 +274,18 @@ Webhook - Chat
                     → Rebuild No-Match Answer → Respond to Webhook
 ```
 
+### Weekly Digest
+
+`n8n/weekly-digest-workflow.json`. Four nodes, linear:
+
+`Schedule Trigger` (Mon 08:00, workflow Timezone = Asia/Manila)
+-> `Get Digest Data` (Postgres, one aggregate query, `::int` casts required
+   or the counts arrive as strings and Number comparisons fail)
+-> `Anything To Report?` (If, sum > 0; false branch intentionally unconnected
+   so an empty week sends nothing)
+-> `Send a text message` (Telegram, HTML parse mode, On Error = continue
+   using error output)
+
 ### New Order Alert
 
 ```
@@ -411,3 +423,19 @@ logging — belongs to the right of the response node AND should have
 weeks stale in the repo while the main workflow was current, and nothing caught
 it: `test:intent-sync` only covers `intent.ts`. Export both before trusting
 either.
+
+### Telegram node: Parse Mode defaults to Markdown, and there is no "None"
+
+Leaving Parse Mode unset does **not** mean plain text. The node sends Markdown,
+and the dropdown offers only Markdown (Legacy), MarkdownV2 and HTML. Any
+untrusted text in the message body - customer questions, product names, error
+strings - can therefore break the send with
+`Bad Request: can't parse entities`. A single unpaired `_` is enough.
+
+Use **HTML** and escape `&`, `<` and `>` at the source. HTML treats only
+those three characters specially; MarkdownV2 needs about eighteen escaped.
+
+This failure is quiet if the node's On Error is set to continue: the canvas
+shows a completed run and the message simply never arrives. Read the node's
+output panel, not the canvas. See `PORTING.md` for the digest's specific
+parse-mode-plus-SQL-escaping pairing.
