@@ -1,73 +1,73 @@
 [
-    {
-        "id":  "faq-001",
-        "question":  "What is your refund policy if my order arrives wrong or incomplete?",
-        "answer":  "If your order is wrong, missing items, or arrives cold/damaged, contact us within 1 hour of delivery for a refund or replacement."
-    },
-    {
-        "id":  "faq-002",
-        "question":  "How long does delivery take?",
-        "answer":  "Typically 15-30 minutes depending on your location and order volume."
-    },
-    {
-        "id":  "faq-003",
-        "question":  "How much is the delivery fee?",
-        "answer":  "Flat rate â‚±25, or free above â‚±1000 order value. May vary by distance."
-    },
-    {
-        "id":  "faq-004",
-        "question":  "What payment methods do you accept?",
-        "answer":  "Cash on delivery, GCash, bank transfer"
-    },
-    {
-        "id":  "faq-005",
-        "question":  "Can I cancel or modify my order after placing it?",
-        "answer":  "Yes, within 5 minutes of placing the order, before it\u0027s confirmed/prepared, by contacting us at 0915456789"
-    },
-    {
-        "id":  "faq-006",
-        "question":  "What happens if an item on the menu is unavailable?",
-        "answer":  "We\u0027ll contact you to offer a substitute or remove it from your order with a refund for that item."
-    },
-    {
-        "id":  "faq-007",
-        "question":  "Do you accommodate food allergies or dietary restrictions?",
-        "answer":  "Please note allergies in your order; we\u0027ll do our best but cannot guarantee a completely allergen-free environment."
-    },
-    {
-        "id":  "faq-008",
-        "question":  "How can I contact customer support?",
-        "answer":  "Email dennisphx18@gmail.com or message us on Facebook at https://www.facebook.com/dennis.hermoso1, will respond as soon as possible."
-    },
-    {
-        "id":  "faq-009",
-        "question":  "What areas do you deliver to?",
-        "answer":  "We currently deliver within Muntinlupa city/area. Enter your address at checkout to confirm coverage."
-    },
-    {
-        "id":  "faq-010",
-        "question":  "What are your operating hours?",
-        "answer":  "Open daily from 10 AM to 7 PM, last orders accepted at 6."
-    },
-    {
-        "id":  "faq-011",
-        "question":  "Can I schedule an order for a later time?",
-        "answer":  "Not currently â€” we only accept same-day orders for immediate delivery, no advance scheduling yet."
-    },
-    {
-        "id":  "faq-012",
-        "question":  "Do you offer catering or bulk orders?",
-        "answer":  "Yes, contact us at least 7 days in advance for orders above 12 pax."
-    },
-    {
-        "id":  "faq-013",
-        "question":  "What\u0027s on the menu? What food do you have available? What can I order?",
-        "answer":  "We offer a variety of home-cooked Filipino dishes, including Ginataang Hipon, Pork Adobo, Special Chicken Adobo, Tofu Sisig, Sizzling Sisig, Lumpiang Shanghai, Crispy Lechon Kawali, Chicken Curry, and Sweet and Spicy Laing. Ask about any specific dish for more details on ingredients and pricing!"
-    },
-    {
-        "id":  "faq-014",
-        "question":  "What do you recommend? What\u0027s your best seller or most popular dish?",
-        "answer":  "A few dishes we\u0027d suggest trying: Special Chicken Adobo, a classic Filipino comfort dish; Crispy Lechon Kawali for something rich and indulgent; Ginataang Hipon if you like seafood in creamy coconut milk; and Sizzling Sisig for something savory and grilled. Let us know your taste preference â€” spicy, savory, seafood â€” and we can help narrow it down!",
-        "note":  "PLACEHOLDER: dishes listed are editorial picks, not sales-ranked. No best-seller data exists yet. Once real order volume accumulates, replace with actual top sellers from WooCommerce Analytics and re-run npm run ingest:faqs. Do not restate these as best sellers. This field is not embedded or shown to customers."
-    }
+  {
+    "id": "faq-001",
+    "question": "What is your refund policy if my order arrives wrong or incomplete?",
+    "answer": "If your order is wrong, missing items, or arrives cold/damaged, contact us within 1 hour of delivery for a refund or replacement."
+  },
+  {
+    "id": "faq-002",
+    "question": "How long does delivery take?",
+    "answer": "Typically 15-30 minutes depending on your location and order volume."
+  },
+  {
+    "id": "faq-003",
+    "question": "How much is the delivery fee?",
+    "answer": "Flat rate â‚±25, or free above â‚±1000 order value. May vary by distance."
+  },
+  {
+    "id": "faq-004",
+    "question": "What payment methods do you accept?",
+    "answer": "Cash on delivery, GCash, PayMaya, and bank transfer."
+  },
+  {
+    "id": "faq-005",
+    "question": "Can I cancel or modify my order after placing it?",
+    "answer": "Yes, within 5 minutes of placing the order, before it's confirmed/prepared, by contacting us at 0915456789"
+  },
+  {
+    "id": "faq-006",
+    "question": "What happens if an item on the menu is unavailable?",
+    "answer": "We'll contact you to offer a substitute or remove it from your order with a refund for that item."
+  },
+  {
+    "id": "faq-007",
+    "question": "Do you accommodate food allergies or dietary restrictions?",
+    "answer": "Please note allergies in your order; we'll do our best but cannot guarantee a completely allergen-free environment."
+  },
+  {
+    "id": "faq-008",
+    "question": "How can I contact customer support?",
+    "answer": "Email dennisphx18@gmail.com or message us on Facebook at https://www.facebook.com/dennis.hermoso1, will respond as soon as possible."
+  },
+  {
+    "id": "faq-009",
+    "question": "What areas do you deliver to?",
+    "answer": "We currently deliver within Muntinlupa city/area. Enter your address at checkout to confirm coverage."
+  },
+  {
+    "id": "faq-010",
+    "question": "What are your operating hours?",
+    "answer": "Open every day of the week, including Saturdays and Sundays, from 10 AM to 7 PM. Last orders are accepted at 6 PM. We deliver on Sundays and holidays as normal."
+  },
+  {
+    "id": "faq-011",
+    "question": "Can I schedule an order for a later time?",
+    "answer": "Not currently â€” we only accept same-day orders for immediate delivery, no advance scheduling yet."
+  },
+  {
+    "id": "faq-012",
+    "question": "Do you offer catering or bulk orders?",
+    "answer": "Yes, contact us at least 7 days in advance for orders above 12 pax."
+  },
+  {
+    "id": "faq-013",
+    "question": "What's on the menu? What food do you have available? What can I order?",
+    "answer": "We offer a variety of home-cooked Filipino dishes, including Ginataang Hipon, Pork Adobo, Special Chicken Adobo, Tofu Sisig, Sizzling Sisig, Lumpiang Shanghai, Crispy Lechon Kawali, Chicken Curry, and Sweet and Spicy Laing. Ask about any specific dish for more details on ingredients and pricing!"
+  },
+  {
+    "id": "faq-014",
+    "question": "What do you recommend? What's your best seller or most popular dish?",
+    "answer": "A few dishes we'd suggest trying: Special Chicken Adobo, a classic Filipino comfort dish; Crispy Lechon Kawali for something rich and indulgent; Ginataang Hipon if you like seafood in creamy coconut milk; and Sizzling Sisig for something savory and grilled. Let us know your taste preference â€” spicy, savory, seafood â€” and we can help narrow it down!",
+    "note": "PLACEHOLDER: dishes listed are editorial picks, not sales-ranked. No best-seller data exists yet. Once real order volume accumulates, replace with actual top sellers from WooCommerce Analytics and re-run npm run ingest:faqs. Do not restate these as best sellers. This field is not embedded or shown to customers."
+  }
 ]
