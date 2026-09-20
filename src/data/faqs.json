@@ -69,5 +69,10 @@
     "question": "What do you recommend? What's your best seller or most popular dish?",
     "answer": "A few dishes we'd suggest trying: Special Chicken Adobo, a classic Filipino comfort dish; Crispy Lechon Kawali for something rich and indulgent; Ginataang Hipon if you like seafood in creamy coconut milk; and Sizzling Sisig for something savory and grilled. Let us know your taste preference â€” spicy, savory, seafood â€” and we can help narrow it down!",
     "note": "PLACEHOLDER: dishes listed are editorial picks, not sales-ranked. No best-seller data exists yet. Once real order volume accumulates, replace with actual top sellers from WooCommerce Analytics and re-run npm run ingest:faqs. Do not restate these as best sellers. This field is not embedded or shown to customers."
+  },
+  {
+    "id": "faq-015",
+    "question": "Do your dishes contain shrimp paste (bagoong), shellfish, or seafood? Is the Laing made with bagoong?",
+    "answer": "None of our dishes are made with shrimp paste (bagoong), including our Laing, which we prepare without it. Ginataang Hipon is a shrimp dish, so it does contain shellfish. We also use fish sauce (patis) in our cooking, which is made from fish. If you have a shellfish, fish or seafood allergy, please tell us before you order so we can check the specific dish for you - do not rely on this chat alone to decide whether a dish is safe for you."
   }
 ]
