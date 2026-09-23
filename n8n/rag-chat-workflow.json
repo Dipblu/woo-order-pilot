@@ -168,8 +168,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
       "position": [
-        1024,
-        2544
+        1040,
+        2624
       ],
       "notes": "After importing, open this node and re-select 'Order Pilot - Order Lookup' from the workflow dropdown -- the target workflow ID is assigned by n8n on import and can't be hardcoded in this file."
     },
@@ -182,8 +182,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1424,
-        2544
+        1440,
+        2624
       ]
     },
     {
@@ -302,7 +302,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1744,
+        1696,
         2304
       ]
     },
@@ -327,7 +327,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ model: \"claude-sonnet-5\", max_tokens: 1024, system: `You are a customer support assistant for an online food delivery store. Answer the customer's question using ONLY the context below. If the context doesn't contain the answer, say you're not sure and suggest contacting support directly. Be concise and friendly.\\n\\nDo not claim any dish is popular, a best seller, or a customer favorite unless the context explicitly says so. Present recommendations as suggestions only.\\n\\nRespond in plain text. Do not use markdown formatting of any kind - no asterisks, bold, headers, or bullet characters.\\n\\nContext:\\n` + $json.context, messages: [ { role: \"user\", content: $json.question } ] }) }}",
+        "jsonBody": "={{ JSON.stringify({ model: \"claude-sonnet-5\", max_tokens: 1024, system: `You are a customer support assistant for an online food delivery store. Answer the customer's question using ONLY the context below. If the context doesn't contain the answer, say you're not sure and suggest contacting support directly. Be concise and friendly.\\n\\nDo not claim any dish is popular, a best seller, or a customer favorite unless the context explicitly says so. Present recommendations as suggestions only.\\n\\nRespond in plain text. Do not use markdown formatting of any kind - no asterisks, bold, headers, or bullet characters.\\n\\nWhen the customer asks whether a dish is safe for an allergy or dietary restriction, only state what the context explicitly says about that dish. Never infer that a dish is safe because the context does not mention an allergen - absence of information is not evidence of absence. If the context does not explicitly address the dish they asked about, say you cannot confirm it and ask them to check with staff before ordering.\\n\\nContext:\\n` + $json.context, messages: [ { role: \"user\", content: $json.question } ] }) }}",
         "options": {}
       },
       "id": "4938ffa7-504b-4d5b-8c7c-1534d1399f1b",
@@ -468,8 +468,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1920,
-        2288
+        1904,
+        2304
       ],
       "id": "e540b0f3-33a2-497f-b9d2-2a0bc5a1b237",
       "name": "Log Below-Threshold Miss",
@@ -488,14 +488,14 @@
       "typeVersion": 2,
       "position": [
         2112,
-        2288
+        2304
       ],
       "id": "c4508355-8c4d-4b64-9f93-78563227a390",
       "name": "Rebuild No-Match Answer"
     },
     {
       "parameters": {
-        "jsCode": "const answer = $('Format Response').item.json.answer ?? \"\";\nconst lower = answer.toLowerCase();\n\nconst DECLINE_PHRASES = [\n  \"i'm not sure\",\n  \"i am not sure\",\n  \"outside what i can help\",\n  \"i don't have that information\",\n  \"i do not have that information\",\n  \"i'm not able to find\",\n  \"i am not able to find\",\n  \"i don't have access to\",\n  \"i'm not able to help with that\",\n  \"reach out to our support team\",\n  \"speak with a person\",\n];\n\nconst isLowConfidence = DECLINE_PHRASES.some(p => lower.includes(p));\n\nreturn [{\n  json: {\n    ...$json,\n    isLowConfidence\n  }\n}];"
+        "jsCode": "const answer = $('Format Response').item.json.answer ?? \"\";\n// Normalise curly apostrophes so \"can’t\" matches \"can't\".\nconst lower = answer.toLowerCase().replace(/[\\u2018\\u2019]/g, \"'\");\n\nconst DECLINE_PHRASES = [\n  \"i'm not sure\",\n  \"i am not sure\",\n  \"outside what i can help\",\n  \"i don't have that information\",\n  \"i do not have that information\",\n  \"i'm not able to find\",\n  \"i am not able to find\",\n  \"i don't have access to\",\n  \"i'm not able to help with that\",\n  \"reach out to our support team\",\n  \"speak with a person\",\n];\n\n// Declines produced by the allergy rule in the Ask Claude system prompt.\n// Logged regardless of similarity: the dish is usually in the KB (high\n// similarity) but its allergen data is not, and that is the gap to report.\nconst ALLERGY_DECLINE_PHRASES = [\n  \"cannot confirm\",\n  \"can't confirm\",\n  \"unable to confirm\",\n];\n\nconst isLowConfidence = DECLINE_PHRASES.some(p => lower.includes(p));\nconst isAllergyDecline = ALLERGY_DECLINE_PHRASES.some(p => lower.includes(p));\n\n// Must come from Check Relevance: $json here only carries { answer }.\nconst topSimilarity = $('Check Relevance').first().json.topSimilarity;\n\nconst shouldLog = (isLowConfidence && topSimilarity < 0.5) || isAllergyDecline;\n\nreturn [{\n  json: {\n    ...$json,\n    isLowConfidence,\n    isAllergyDecline,\n    shouldLog\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -599,8 +599,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1216,
-        2544
+        1248,
+        2624
       ],
       "id": "d5e68aff-b2b9-4ed6-9df8-71ee02e4c469",
       "name": "Clear Pending Intent",
@@ -746,8 +746,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        736,
-        1728
+        512,
+        1808
       ],
       "id": "53457e57-268f-474a-8019-431ad82e3673",
       "name": "Check Recent Escalation",
@@ -786,8 +786,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        976,
-        1728
+        768,
+        1792
       ],
       "id": "2c4bee2c-85b4-4990-9569-61f91bbe4d65",
       "name": "Already Escalated?"
@@ -799,8 +799,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1184,
-        1680
+        1040,
+        1664
       ],
       "id": "d23abc52-edc7-44fa-813c-761716fa5f76",
       "name": "Escalation Suppressed"
@@ -852,8 +852,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1328,
-        1680
+        1200,
+        1664
       ],
       "id": "c10a4652-d689-405c-a5d2-26d4321fcc00",
       "name": "Log Suppressed Escalation",
@@ -871,8 +871,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1472,
-        1680
+        1376,
+        1664
       ],
       "id": "1b7ecc14-2b53-4022-a493-a1f52dfcb41b",
       "name": "Rebuild Suppressed Answer"
@@ -884,7 +884,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1712,
+        1696,
         2096
       ],
       "id": "3ac7e41f-efc0-4209-8a06-3ecb705f7101",
@@ -901,7 +901,7 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1904,
+        1888,
         2096
       ],
       "id": "a6b927ba-4497-4de4-9452-968a36fc3d46",
@@ -937,8 +937,8 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        2944,
-        2240
+        2592,
+        1920
       ],
       "id": "54a78edd-1158-49c8-a980-cd945b57aa62",
       "name": "Send a text message",
@@ -963,8 +963,8 @@
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
       "position": [
-        1216,
-        2096
+        1040,
+        1936
       ],
       "id": "33087aaf-37be-4f5a-8e54-9892df1480b9",
       "name": "Send Escalation Email",
@@ -1070,21 +1070,12 @@
           "conditions": [
             {
               "id": "f5933605-e0cf-478d-b1a3-52023e04df19",
-              "leftValue": "={{ $json.isLowConfidence }}",
+              "leftValue": "={{ $json.shouldLog }}",
               "rightValue": "=\n",
               "operator": {
                 "type": "boolean",
                 "operation": "true",
                 "singleValue": true
-              }
-            },
-            {
-              "id": "11980f0e-e6ad-4718-a883-d5a92756b79b",
-              "leftValue": "={{ $('Check Relevance').first().json.topSimilarity }}",
-              "rightValue": 0.5,
-              "operator": {
-                "type": "number",
-                "operation": "lt"
               }
             }
           ],
@@ -1704,7 +1695,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "ea4f3b3c-9176-492b-8b82-6a85d81a8d42",
+  "versionId": "ff612fba-bc8c-491d-af58-5627c23859eb",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "6c422960399e48c3a4d8bf32dede75ad1eb6346cc178f3c32bf2211887dab507"
