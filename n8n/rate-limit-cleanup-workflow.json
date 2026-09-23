@@ -1,0 +1,73 @@
+{
+  "name": "Order Pilot - Rate Limit Cleanup",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 3
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "edfcf58b-d3c8-4ed6-bea1-d4b5ac18f451",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH deleted AS (\n  DELETE FROM rate_limits WHERE window_start < now() - interval '2 days' RETURNING 1\n)\nSELECT (SELECT count(*) FROM deleted) AS rows_deleted",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        208,
+        0
+      ],
+      "id": "49f3cdf4-5c96-43dc-add3-5d87adc7ad40",
+      "name": "Delete Old Rate Limits",
+      "credentials": {
+        "postgres": {
+          "id": "nII9UJDNmVB93OrV",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Delete Old Rate Limits",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "9d286d19-3e5c-44c8-9b00-af0ec8602785",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6c422960399e48c3a4d8bf32dede75ad1eb6346cc178f3c32bf2211887dab507"
+  },
+  "nodeGroups": [],
+  "id": "qWmRMiAq1od26MIu",
+  "tags": []
+}
