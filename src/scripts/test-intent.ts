@@ -142,6 +142,11 @@ const TEST_CASES: TestCase[] = [
     message: 'hermosodennis2@gmail.com my food arrived cold',
     expect: { intent: 'complaint', orderNumber: null },
   },
+  {
+    name: 'production miss: order number plus cold-and-late complaint (2026-09-23)',
+    message: 'order 771, my food was cold and late',
+    expect: { intent: 'complaint', orderNumber: '771', email: null },
+  },
 
   // --- continuation / session state ---
   {

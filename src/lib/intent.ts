@@ -38,6 +38,7 @@ export const COMPLAINT_KEYWORDS = [
   'escalate',
   'cold food',
   'arrived cold',
+  'was cold',
   'very late',
   'rude',
   'poor service',
