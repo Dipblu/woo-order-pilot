@@ -17,6 +17,7 @@ Last verified: 2026-10-27.
 | `npm run test:intent-sync` | 7 drift checks between repo and n8n | no |
 | `npm run test:ratelimit` | 21 rate-limiter cases: the 21st request trips, sliding-window overlap maths, boundary burst, clamp, IP resolution | no |
 | `npm run test:ratelimit-sync` | 10 drift checks between `src/lib/ratelimit.ts` and the rate-limit nodes in n8n (including "no literal threshold or window creeps back") | no |
+| `npm run test:escalation-sync` | 13 structural checks on the escalation path in the n8n export: SMTP not Gmail, Config-driven addresses with the `=` prefix, error outputs wired, honest failure reply, Telegram alert cannot block the reply, Config node intact | no |
 | `npm run test:retrieval` | 26 retrieval cases, `MATCH_WITHIN = 3` | yes (Supabase + OpenAI) |
 | `npm run test:connection` | connectivity smoke test | yes |
 
@@ -91,6 +92,14 @@ yet updated, the guard failed on `COMPLAINT_KEYWORDS` exactly as designed.
 
 **n8n remains the source of truth for behaviour.** The guard catches a specific
 and common class of drift; it is not a proof of equivalence.
+
+### Two more guards read the same export
+
+`test-ratelimit-sync.ts` (rate-limit nodes vs `src/lib/ratelimit.ts`) and
+`test-escalation-sync.ts` (escalation structure) use the same technique and have
+the same limitation: they check what they list, not whole-node equivalence. All
+three are also stale-export detectors, because a stale export fails them. Run
+all three before every commit.
 
 ### Expect a transient sync failure mid-change
 
@@ -226,6 +235,18 @@ documented the old behaviour before assuming something broke.
   node. Also pins the SQL shape: atomic `ON CONFLICT ... + 1 RETURNING`, and
   `COALESCE(..., 0)` on the previous-window read.
 
+- Escalation structure — 13 checks (`test-escalation-sync.ts`) that the exported
+  workflow still has: no Gmail nodes or OAuth credentials (the 7-day token expiry
+  class of failure), both escalation emails as SMTP, From / To / Subject / time
+  zone read from Config with the leading `=` kept (`afb29ff`), On Error =
+  "Continue (using error output)" with the error output wired to the failure
+  reply, a failure reply that never claims the team was told, the Telegram alert
+  unable to block the customer reply (`d3261b7`), the order number and customer
+  email present in the complaint-with-order email, and the Config node still
+  passing the webhook body through. Each check was verified to fail when the
+  thing it guards is broken. This proves STRUCTURE only: whether SMTP really
+  delivers still needs a real complaint sent through the widget.
+
 QUIRKs recorded in the rate-limit suite: blocked requests still count, so a
 100-request burst is not released until ~80% into the next window; and every
 request with no usable IP header shares one `unknown` bucket.
@@ -235,7 +256,7 @@ request with no usable IP header shares one `unknown` bucket.
 | Area | Why it is hard |
 |---|---|
 | Order lookup | needs a live webhook or WooCommerce fixtures |
-| Escalation | sends real email; needs a live Gmail credential |
+| Escalation, delivery | the structure is guarded; that SMTP actually sends needs the live credential. Verify by sending a real complaint and checking the inbox |
 | Rate limiting, SQL half | the formula is covered; the SQL is only string-checked. Whether the upsert really increments and `COALESCE` really returns 0 needs a real Postgres |
 | Load / concurrency | `ON CONFLICT DO UPDATE` under concurrent upserts is assumed correct, not verified |
 | Stale pending intents | there is no staleness logic to test |

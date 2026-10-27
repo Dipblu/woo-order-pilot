@@ -11,7 +11,8 @@
         "test:intent": "tsx src/scripts/test-intent.ts",
         "test:intent-sync": "tsx src/scripts/test-intent-sync.ts",
         "test:ratelimit": "tsx src/scripts/test-ratelimit.ts",
-        "test:ratelimit-sync": "tsx src/scripts/test-ratelimit-sync.ts"
+        "test:ratelimit-sync": "tsx src/scripts/test-ratelimit-sync.ts",
+        "test:escalation-sync": "tsx src/scripts/test-escalation-sync.ts"
     },
     "dependencies": {
         "dotenv": "^16.4.5",
