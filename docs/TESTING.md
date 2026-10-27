@@ -5,7 +5,7 @@ What is covered, what is not, and why the tests are shaped the way they are.
 **Not superseded each phase.** Fix things here rather than re-recording
 corrections in a handoff.
 
-Last verified: 2026-09-06.
+Last verified: 2026-10-27.
 
 ---
 
@@ -15,6 +15,8 @@ Last verified: 2026-09-06.
 |---|---|---|
 | `npm run test:intent` | 69 intent-classification cases | no |
 | `npm run test:intent-sync` | 7 drift checks between repo and n8n | no |
+| `npm run test:ratelimit` | 21 rate-limiter cases: the 21st request trips, sliding-window overlap maths, boundary burst, clamp, IP resolution | no |
+| `npm run test:ratelimit-sync` | 10 drift checks between `src/lib/ratelimit.ts` and the rate-limit nodes in n8n (including "no literal threshold or window creeps back") | no |
 | `npm run test:retrieval` | 26 retrieval cases, `MATCH_WITHIN = 3` | yes (Supabase + OpenAI) |
 | `npm run test:connection` | connectivity smoke test | yes |
 
@@ -213,6 +215,20 @@ documented the old behaviour before assuming something broke.
   replies, unrelated follow-ups.
 - Repo/n8n keyword drift — 7 checks.
 - Retrieval — 26 cases (requires live Supabase + OpenAI).
+- Rate-limiter maths — 21 cases against `src/lib/ratelimit.ts` with the clock
+  pinned and `rate_limits` replaced by an in-memory table: requests 1-20 pass and
+  the 21st is blocked, overlap weighting at the start / halfway / end of a window,
+  the clamp at 0, the boundary burst a fixed window would allow, window length
+  derived from the keys, IP resolution. Each case was checked to fail when the
+  logic it guards is broken.
+- Rate-limiter drift — 10 checks that the n8n nodes still match `ratelimit.ts`
+  and that no literal limit or window is back in `Over Limit` or the estimate
+  node. Also pins the SQL shape: atomic `ON CONFLICT ... + 1 RETURNING`, and
+  `COALESCE(..., 0)` on the previous-window read.
+
+QUIRKs recorded in the rate-limit suite: blocked requests still count, so a
+100-request burst is not released until ~80% into the next window; and every
+request with no usable IP header shares one `unknown` bucket.
 
 ### Not covered
 
@@ -220,8 +236,7 @@ documented the old behaviour before assuming something broke.
 |---|---|
 | Order lookup | needs a live webhook or WooCommerce fixtures |
 | Escalation | sends real email; needs a live Gmail credential |
-| Rate limiting | Postgres-dependent, and the sliding window is time-sensitive |
-| Sliding-window edges | window boundary behaviour; `Get Previous Window Count` returning null vs 0 |
+| Rate limiting, SQL half | the formula is covered; the SQL is only string-checked. Whether the upsert really increments and `COALESCE` really returns 0 needs a real Postgres |
 | Load / concurrency | `ON CONFLICT DO UPDATE` under concurrent upserts is assumed correct, not verified |
 | Stale pending intents | there is no staleness logic to test |
 
